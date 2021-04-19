@@ -31,7 +31,7 @@ io.on("connection", function (socket) {
             //Funktion ADD User Currently Online
         });
 
-        socket.on("request-registration", (arg1,object, answer) => {
+        socket.on("request-registration", (object, answer) => {
             try {
               //Für Timo
               //Datenbank abspeichern mit nummer/Pseudonym und dazugehöriger ID 
