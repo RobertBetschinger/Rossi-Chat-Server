@@ -24,15 +24,19 @@ io.on("connection", function (socket) {
             socket.broadcast.emit("Person Disconnected", disconnectedName);
         });
 
-        socket.on("request-registration", (object, answer) => {
+        socket.on("request-registration", (arg1,object, answer) => {
             try {
-                //Für Timo
-              //const createdUser = await this.User.create(userInfo);
-              console.log(object)
-              console.log(object.phonenumber)
-              var id = object.phonenumber + ID()
-              console.log(id)
-              console.log("createdUser")
+              //Für Timo
+              //Datenbank abspeichern mit nummer/Pseudonym und dazugehöriger ID 
+              var id = ID()
+                const UserObject={
+                    userId: id,
+                    number: object.phonenumber,
+                    spitzname: object.pseudonym
+                }
+              console.log(UserObject)
+             //const createdUser = await this.User.create(userInfo); Befehl zum abspeichern des Users in der Datenbank
+                console.log("createdUser")
               const privMessageObj = {
                 userId: id
               };
@@ -43,20 +47,51 @@ io.on("connection", function (socket) {
               answer(false)
           }
           });
-        
-      
+
+
+          //Ganz WICHTIG:
+          //AddUserCurrentlyOnline List
+          //AbfrageWerGeradeOnline ISt
+
+          //Neue Funktionen
+          //Change Pseudonym
+          //OpenChat ID
+
+
+
+    
          
-          //Gruppenchat mit allen connecten Sockets/Usern
-          socket.on("send-chat-message", (message) => {
-              console.log(message.message)
-              console.log(message.userName)
-           
+          //Privatchat zwischen zwei Usern
+          socket.on("send-chat-message-privat", (message,answer) => {
+            console.log(message)
+
+           //Search Empfänger ID by Chat ID
+           //Look Up if he is currently Online
+            var IsOnline = true 
+           if(IsOnline){
+               try{
+                // socket.broadcast.to(empfänger.id).emit("recieve-chat-message-private",message)
+                console.log("Sended Message") 
+                answer(true)
+               }catch{
+                console.error(error) 
+                answer(false)
+               }
+           } else{
+               //Für Timo
+               //Lege Nachricht in Speicher ab
+           }
+              
+            
+             
           
              // socket.broadcast.emit("chat-message", {
              //   message: message,
              //   name: userName.userName,
              // });
             });
+
+            
       
       
           socket.on("got-new-messages?",(data, answer) => {
@@ -65,6 +100,8 @@ io.on("connection", function (socket) {
 
 
         });
+
+
 
         var ID = function () {
             // Math.random should be unique because of its seeding algorithm.
