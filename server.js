@@ -29,8 +29,14 @@ io.on("connection", function (socket) {
               //const createdUser = await this.User.create(userInfo);
             
               console.log(data.phonenumber)
+              var id = data.phonenumber *30;
+              console.log(id)
               console.log("createdUser")
-              answer(true)
+              const privMessageObj = {
+                userId: id
+              };
+              console.log(privMessageObj)
+              answer(privMessageObj)
           } catch (error) {
               console.error(error) 
               answer(false)
