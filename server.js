@@ -6,7 +6,7 @@ const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
 
-const users = [];
+const usersCurrentlyOnline = [];
 
 io.on("connection", function (socket) {
     console.log("a user connected");
@@ -14,14 +14,21 @@ io.on("connection", function (socket) {
     //Disconnect
     socket.on("disconnect", function () {
         console.log("user disconnected");
-        let disconnectedName;
             for (let i = 0; i < users.length; i++) {
-            if (users[i].id === socket.id) {
-                disconnectedName = users[i].userName;
+            if (users[i].id === socket.id) {   
                 users.splice(i, 1);
             }
             }
-            socket.broadcast.emit("Person Disconnected", disconnectedName);
+           
+        });
+
+        socket.on("send-user-id",(arg1,answer) => {
+            console.log(arg1)
+            usersCurrentlyOnline.push({
+                id: socket.id,
+                PermanentUserID: arg1
+              });
+            //Funktion ADD User Currently Online
         });
 
         socket.on("request-registration", (arg1,object, answer) => {
@@ -84,11 +91,7 @@ io.on("connection", function (socket) {
               
             
              
-          
-             // socket.broadcast.emit("chat-message", {
-             //   message: message,
-             //   name: userName.userName,
-             // });
+    
             });
 
             
