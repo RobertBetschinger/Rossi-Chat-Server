@@ -29,7 +29,7 @@ io.on("connection", function (socket) {
               //const createdUser = await this.User.create(userInfo);
             
               console.log(data.phonenumber)
-              var id = data.phonenumber *30;
+              var id = data.phonenumber + ID()
               console.log(id)
               console.log("createdUser")
               const privMessageObj = {
@@ -64,6 +64,13 @@ io.on("connection", function (socket) {
 
 
         });
+
+        var ID = function () {
+            // Math.random should be unique because of its seeding algorithm.
+            // Convert it to base 36 (numbers + letters), and grab the first 9 characters
+            // after the decimal.
+            return '_' + Math.random().toString(36).substr(2, 9);
+          };
 
 
 
