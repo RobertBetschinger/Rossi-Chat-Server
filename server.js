@@ -27,7 +27,7 @@ io.on("connection", function (socket) {
         socket.on("request-registration", (data, answer) => {
             try {
               //const createdUser = await this.User.create(userInfo);
-            
+            console.log(data)
               console.log(data.phonenumber)
               var id = data.phonenumber + ID()
               console.log(id)
