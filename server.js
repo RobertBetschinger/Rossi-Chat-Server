@@ -15,8 +15,8 @@ io.on("connection", function (socket) {
     socket.on("disconnect", function () {
         console.log("user disconnected");
             for (let i = 0; i < users.length; i++) {
-            if (users[i].id === socket.id) {   
-                users.splice(i, 1);
+            if (usersCurrentlyOnline[i].id === socket.id) {   
+                usersCurrentlyOnline.splice(i, 1);
             }
             }
            
@@ -28,7 +28,7 @@ io.on("connection", function (socket) {
                 id: socket.id,
                 PermanentUserID: arg1
               });
-            //Funktion ADD User Currently Online
+           
         });
 
         socket.on("request-registration", (object, answer) => {
