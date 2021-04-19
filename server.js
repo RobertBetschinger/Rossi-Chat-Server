@@ -6,6 +6,8 @@ const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
 
+const users = [];
+
 io.on("connection", function (socket) {
     console.log("a user connected");
 
@@ -25,7 +27,7 @@ io.on("connection", function (socket) {
         socket.on("request-registration", (data, answer) => {
             try {
               //const createdUser = await this.User.create(userInfo);
-              console.log(data.username)
+            
               console.log(data.phonenumber)
               console.log("createdUser")
               answer(true)
