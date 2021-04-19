@@ -2,6 +2,13 @@ var app = require("express")();
 var server = require("http").createServer(app);
 var io = require("socket.io")(server);
 const cors = require("cors");
+const Datastore = require("nedb");
+iddb = new Datastore({ filename: "iddatabase", autoload: true });
+msgdb = new Datastore({ filename: "msgdatabase", autoload: true });
+const fs = require("fs");
+const dbmod = require("./db_module");
+
+
 
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
@@ -41,6 +48,14 @@ io.on("connection", function (socket) {
                     number: object.phonenumber,
                     spitzname: object.pseudonym
                 }
+                //toggle Option für den Save
+                saveData = false;
+                if (saveData = true) {
+                    //Abspeichern des neuen Nutzers in der ID-Database
+                    dbmod.addNewUser(UserObject)
+                };
+                
+              
               console.log(UserObject)
              //const createdUser = await this.User.create(userInfo); Befehl zum abspeichern des Users in der Datenbank
                 console.log("createdUser")
