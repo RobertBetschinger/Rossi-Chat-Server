@@ -24,12 +24,13 @@ io.on("connection", function (socket) {
             socket.broadcast.emit("Person Disconnected", disconnectedName);
         });
 
-        socket.on("request-registration", (data, answer) => {
+        socket.on("request-registration", (object, answer) => {
             try {
+                //Für Timo
               //const createdUser = await this.User.create(userInfo);
-            console.log(data)
-              console.log(data.phonenumber)
-              var id = data.phonenumber + ID()
+              console.log(object)
+              console.log(object.phonenumber)
+              var id = object.phonenumber + ID()
               console.log(id)
               console.log("createdUser")
               const privMessageObj = {
