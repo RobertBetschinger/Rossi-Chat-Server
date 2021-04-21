@@ -4,47 +4,97 @@ const Datastore = require('nedb');
 
 //Function takes input UserObject (userId, phoneNumber, nickName)
 function addNewUser (UserObject){
-    iddb.insert(UserObject, function(err, newDoc){});
-    console.log("User added to database")
+    iddb.insert(UserObject, function(err, newDoc){
+        if (err =! 0) {
+            console.log(err);
+        }
+    });
+    console.log("User added to database");
 };
 
 //Nutzer aus der ID Datenbank löschen
 function deleteUser (userId){
     leaver = iddb.find({userId:{userId}}, function (err, docs) {
-        console.log(leaver)
-    })
+        if (err =! 0) {
+            console.log(err);
+        }
+        else {
+            console.log(leaver);
+        }
+    });
     iddb.remove({userId:userId},{}, function (err, numRemoved) {
+        if (err =! 0) {
+            console.log(err);
+        }
+    });
+};
 
+//UserId für eine Telefonnummer anfragen
+function getUserId (phonenumber){
+    iddb.find({number:{phonenumber}}, function(err, docs) {
+        if (err =! 0) {
+            console.log(err);
+        }
+        else {
+            return docs
+        }
+        
     });
 };
 
 //Telefonnummer für ID ändern
+function changePhonenumber(userId,phonenumberNew){
+    iddb.update({userId:{userId}}, {number:{phonenumberNew}}, function(err, numReplaced){
+        if (err =! 0) {
+            console.log(err);
+        }
+        console.log(numReplaced, " Phonenumber has been changed")
+    });
+};
+
+//Nickname für ID ändern
+function changeNickname(userId,spitzname){
+    iddb.update({userId:{userId}}, {spitzname:{spitzname}}, function(err, numReplaced){
+        if (err =! 0) {
+            console.log(err);
+        }
+        console.log(numReplaced, " Phonenumber has been changed")
+    });
+};
 
 //Nachricht hinzufügen, die nicht zugestellt werden konnte
-function addMessage(userId, messageId, creatorId, timestamp, chatId, message){
-    messagedata = {userId, messageId, creatorId, timestamp, chatId, message};
-    msgdb.insert(messagedata, function(err, newDoc){});
-    console.log("New message data stored to serverdb");
+function addMessage(message){
+    msgdb.insert(message, function(err, newDoc){
+        if (err =! 0) {
+            console.log(err);
+        }
+    });
+    console.log("New message stored to serverdb");
 };
 
+//Nachricht aus der Nachrichten db entfernen, die zugestellt werden konnte
+function deleteMessage(messageId){
+    msgdb.find({messageId:{messageId}}, function(err, newDoc){
+        if (err =! 0) {
+            console.log(err);
+        }
+    });
+    console.log("Message deleted from messagedb");
+};
 
-
-//Nicht funktionsfähig
-function checkUserStatus (userId){
-    userFound = false;
-    db.find({userId:{userId}}, function (err, docs) {
-        userFound = true;
+//Ausstehende Nachrichten an einen Empfänger abfragen
+function requestMessagelist (userId){
+    msgdb.find ({receiverId:{userId}}, function(err, newDoc){
+        if (err =! 0) {
+            console.log(err);
+        }
+        else {
+            return newDoc
+        }
     })
-    ///userFound == Object 
-    if (userFound = true) {
-        console.log("User existing in serverdb")
-    }
-    if (userFound = false) {
-        console.log("user doesnt exist in serverdb")
-    }
-    return;
 };
 
 
-module.exports = {addNewUser, deleteUser};
+
+module.exports = {addNewUser, deleteUser, addMessage, deleteMessage, getUserId, changePhonenumber, requestMessagelist, changeNickname};
 
