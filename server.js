@@ -74,13 +74,13 @@
 
 
           //Entweder:
-          socket.on("open-new-Chat"),(object,answer)=>{
+          socket.on("open-new-Chat",(object,answer)=>{
             //OpenChat
-          }
+          });
           //Oder
-          socket.on("request-chatpartner-receiverId"),(object,answer)=>{
+          socket.on("request-chatpartner-receiverId",(object,answer)=>{
 
-          }
+          });
 
 
           //Privatchat zwischen zwei Usern
