@@ -102,7 +102,8 @@ function requestIddbcontent(){
        if(err =! 0){
            console.log(err)
        } else{
-           return docs
+           console.log(docs)
+           return "Das ist kein echter return"
        }
     });
 }
