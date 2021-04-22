@@ -103,10 +103,4 @@ function requestIddbcontent(){
     });
 }
 
-<<<<<<< HEAD
 module.exports = {addNewUser, deleteUser, addMessage, deleteMessage, getUserId, changePhonenumber, requestMessagelist, changeNickname, requestIddbcontent};
-=======
-
-module.exports = {addNewUser, deleteUser, addMessage, deleteMessage, getUserId, changePhonenumber, requestMessagelist, changeNickname};
-
->>>>>>> b386eadf578d2b9183545600d1e2dae3607856cd

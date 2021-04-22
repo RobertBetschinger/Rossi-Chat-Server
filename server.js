@@ -59,11 +59,13 @@
             }
           });
 
-          socket.on("datenbank-ausgeben", (object,answer)=>{
+          socket.on("datenbank-ausgeben", (answer)=>{
                 try{
-
+                  datenbankobject =Iddb.requestIddbcontent()
+                  console.log(datenbankobject)
                   answer(datenbankobject)
-                }catch{
+                }catch(error){
+                  console.error(error);
                   answer(false)
                 }
 
@@ -93,9 +95,10 @@
           socket.on("request-chatpartner-receiverId",(object,answer)=>{
             try{
 
+                answer()
 
             } catch{
-              
+              answer(false)
             }
           });
 
