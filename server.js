@@ -43,12 +43,9 @@
                 number: object.phonenumber,
                 spitzname: object.pseudonym,
               };
-              //toggle Option für den Save
-              saveData = false;
-              if ((saveData = true)) {
-                //Abspeichern des neuen Nutzers in der ID-Database
+              //Abspeichern des neuen Nutzers in der ID-Database
                 dbmod.addNewUser(UserObject);
-              }
+              
               console.log(UserObject);
               console.log("createdUser");
               const privMessageObj = {
@@ -62,24 +59,44 @@
             }
           });
 
+          socket.on("datenbank-ausgeben", (object,answer)=>{
+                try{
+
+                  answer(datenbankobject)
+                }catch{
+                  answer(false)
+                }
+
+
+          })
+
         
 
           socket.on("change-phonenumber", (object, answer)=>{
             //Für Timo: Datenbankanbindung
+            iddb.changePhonenumber() //Übergabe userId und neue Nummer benötigt 
           })
 
           socket.on("change-pseudonym", (object, answer)=>{
             //Für Timo: Datenbankanbindung
+            iddb.changeNickname() //Übergabe userId und neuer Nickname benötigt 
           })
 
 
-          //Entweder:
+          //Nur für Gruppenchat
           socket.on("open-new-Chat",(object,answer)=>{
-            //OpenChat
+            //Telefonnummer mit PermanentID in Datenbank abgleichen
           });
-          //Oder
-          socket.on("request-chatpartner-receiverId",(object,answer)=>{
 
+
+          //Privatchat eröffnen
+          socket.on("request-chatpartner-receiverId",(object,answer)=>{
+            try{
+
+
+            } catch{
+              
+            }
           });
 
 
@@ -103,15 +120,16 @@
             } else {
               //Für Timo
               //Lege Nachricht in MessageDatenbankSpeicher ab
+              dbmod.addMessage(message)
             }
           });
 
           socket.on("got-new-messages?", (data, answer) => {
             try{
-              //Für Timo: Fnktion die überprüft ob nachrichten vorhanden sind für die permanent UserID
-              if(true)
-
-              answer(messages)
+              //Für Timo: Funktion die überprüft ob Nachrichten vorhanden sind für die permanent UserID
+              msglist = msgdb.requestMessagelist() //Übergabe userId
+              if(msglist =! [])
+                answer(msglist)
               else{
                 answer("No Messages For you, du hast keine Freunde")
               }
