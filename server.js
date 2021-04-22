@@ -61,7 +61,7 @@
 
           socket.on("datenbank-ausgeben", (answer)=>{
                 try{
-                  datenbankobject =iddb.requestIddbcontent()
+                  datenbankobject = dbmod.requestIddbcontent()
                   console.log(datenbankobject)
                   answer(datenbankobject)
                 }catch(error){
@@ -76,12 +76,12 @@
 
           socket.on("change-phonenumber", (object, answer)=>{
             //Für Timo: Datenbankanbindung
-            iddb.changePhonenumber() //Übergabe userId und neue Nummer benötigt 
+            //iddb.changePhonenumber() //Übergabe userId und neue Nummer benötigt 
           })
 
           socket.on("change-pseudonym", (object, answer)=>{
             //Für Timo: Datenbankanbindung
-            iddb.changeNickname() //Übergabe userId und neuer Nickname benötigt 
+           // iddb.changeNickname() //Übergabe userId und neuer Nickname benötigt 
           })
 
 
