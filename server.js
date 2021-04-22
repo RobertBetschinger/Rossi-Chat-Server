@@ -61,7 +61,7 @@
 
           socket.on("datenbank-ausgeben", (answer)=>{
                 try{
-                  datenbankobject =Iddb.requestIddbcontent()
+                  datenbankobject =iddb.requestIddbcontent()
                   console.log(datenbankobject)
                   answer(datenbankobject)
                 }catch(error){
