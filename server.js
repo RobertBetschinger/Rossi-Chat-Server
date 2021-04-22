@@ -59,6 +59,17 @@
             }
           });
 
+          socket.on("datenbank-ausgeben", (object,answer)=>{
+                try{
+
+                  answer(datenbankobject)
+                }catch{
+                  answer(false)
+                }
+
+
+          })
+
         
 
           socket.on("change-phonenumber", (object, answer)=>{
@@ -72,13 +83,20 @@
           })
 
 
-          //Entweder:
+          //Nur für Gruppenchat
           socket.on("open-new-Chat",(object,answer)=>{
-            //OpenChat
+            //Telefonnummer mit PermanentID in Datenbank abgleichen
           });
-          //Oder
-          socket.on("request-chatpartner-receiverId",(object,answer)=>{
 
+
+          //Privatchat eröffnen
+          socket.on("request-chatpartner-receiverId",(object,answer)=>{
+            try{
+
+
+            } catch{
+              
+            }
           });
 
 
