@@ -99,13 +99,9 @@ function requestMessagelist (userId){
 
 function requestIddbcontent(){
     iddb.find({}, function (err, docs) {
-       if(err =! 0){
-           console.log(err)
-       } else{
-           console.log(docs)
-           return "Das ist kein echter return"
-       }
+        return docs
     });
+
 }
 
 module.exports = {addNewUser, deleteUser, addMessage, deleteMessage, getUserId, changePhonenumber, requestMessagelist, changeNickname, requestIddbcontent};
