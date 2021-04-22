@@ -62,6 +62,7 @@
           socket.on("datenbank-ausgeben", (answer)=>{
                 try{
                   datenbankobject = dbmod.requestIddbcontent()
+                  console.log("Die ganze datenbank")
                   console.log(datenbankobject)
                   answer(datenbankobject)
                 }catch(error){

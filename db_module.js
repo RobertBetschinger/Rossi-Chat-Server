@@ -98,8 +98,12 @@ function requestMessagelist (userId){
 };
 
 function requestIddbcontent(){
-    db.find({}, function (err, docs) {
-        return docs
+    iddb.find({}, function (err, docs) {
+       if(err =! 0){
+           console.log(err)
+       } else{
+           return docs
+       }
     });
 }
 
