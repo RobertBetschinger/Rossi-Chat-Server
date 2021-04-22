@@ -26,6 +26,9 @@ function deleteUser (userId){
         if (err =! 0) {
             console.log(err);
         }
+        else {
+            console.log(numRemoved," User has been removed")
+        }
     });
 };
 
