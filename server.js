@@ -3,14 +3,10 @@
         var io = require("socket.io")(server);
         const cors = require("cors");
 
-        const Datastore = require("nedb");
-        iddb = new Datastore({ filename: "iddatabase", autoload: true }); //ID Database, Speicherung der Daten der User
-        msgdb = new Datastore({ filename: "msgdatabase", autoload: true }); //Message Database, nicht zugestellte Nachrichten werden hier für permanentId und Message gespeichert
-        chatsdb = new Datastore({filename: "chatsdatabase", autoload: true}) //Chats Database, Eine Datenbank mit den Chats und den jeweiligen Partnern, kene nachrichten
-        const fs = require("fs");
-        const dbmod = require("./db_module");
         const router = require("./router");
         const PORT = process.env.PORT || 5000;
+
+        const mongodb = require("./connect");
 
         const usersCurrentlyOnline = [];
 
@@ -43,8 +39,10 @@
                 number: object.phonenumber,
                 spitzname: object.pseudonym,
               };
+              //Für Timo:
               //Abspeichern des neuen Nutzers in der ID-Database
-                dbmod.addNewUser(UserObject);
+              mongodb.connect();
+              mongodb.addNewUser(UserObject);
               
               console.log(UserObject);
               console.log("createdUser");
@@ -77,12 +75,12 @@
 
           socket.on("change-phonenumber", (object, answer)=>{
             //Für Timo: Datenbankanbindung
-            //iddb.changePhonenumber() //Übergabe userId und neue Nummer benötigt 
+            
           })
 
           socket.on("change-pseudonym", (object, answer)=>{
             //Für Timo: Datenbankanbindung
-           // iddb.changeNickname() //Übergabe userId und neuer Nickname benötigt 
+           
           })
 
 
@@ -123,15 +121,14 @@
               }
             } else {
               //Für Timo
-              //Lege Nachricht in MessageDatenbankSpeicher ab
-              dbmod.addMessage(message)
+              
             }
           });
 
           socket.on("got-new-messages?", (data, answer) => {
             try{
               //Für Timo: Funktion die überprüft ob Nachrichten vorhanden sind für die permanent UserID
-              msglist = msgdb.requestMessagelist() //Übergabe userId
+              
               if(msglist =! [])
                 answer(msglist)
               else{
