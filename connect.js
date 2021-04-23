@@ -5,7 +5,7 @@ const User = mongoose.model("User");
 const Message = mongoose.model("Message");
 
 function connect(){
-    mongoose.connect("mongodb+srv://rossi-chat-server:HuJxRXosqULK9MmC@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",{ useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
+    mongoose.connect("mongodb+srv://rossi-chat-server:"+ process.env.MONGO_ATLAS_CREDS +"@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",{ useNewUrlParser: true, useUnifiedTopology: true }, (err) => {
     if (!err) {console.log("MongoDB connection succeeded")}
     else {return (err)}
     })
