@@ -1,15 +1,14 @@
 const mongoose = require ("mongoose")
 
 const msgSchema = new mongoose.Schema({
+    senderId: String,
+    receiverId: String,
+    messageContent: Object,
     messageId: {
         type: String,
         required: true
     },
-    creatorId: String,
-    timestamp: String,
-    chatId: String,
-    Message: Object,
-    Pseudonym: String
+    timestamp: String
 });
 
 const Message = mongoose.model('Message', msgSchema);
