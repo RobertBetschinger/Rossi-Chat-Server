@@ -59,6 +59,8 @@ async function findUserByNumber(number) {
       user.spitzname
     );
   }).exec();
+
+  return user
 }
 
 function addMessage(message) {
