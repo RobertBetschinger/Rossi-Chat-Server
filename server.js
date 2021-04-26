@@ -39,7 +39,7 @@
               const UserObject = {
                 userId: id,
                 number: object.phonenumber,
-                spitzname: object.pseudonym,
+                spitzname: "Das ist ein Kolibri",
               };
               //Für Timo:
               //Abspeichern des neuen Nutzers in der ID-Database
