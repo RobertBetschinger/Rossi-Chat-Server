@@ -92,17 +92,23 @@ const { rejects } = require("assert");
           //Privatchat eröffnen
           //Bug
           socket.on("request-chatpartner-receiverId",(object,answer)=>{
-            try{
-               currentPhoneNumber = object.phonenumber
-               console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
-               let seachredID =  mongodb.findUserByNumber(currentPhoneNumber);
-              console.log("Das ist die gefundene ID:" + seachredID)
-            }catch(err){
-              console.log(err)
-            }
+
+           
+            var response = searchID(object.phonenumber)
+            answer(response)
               
           
         });
+
+        async function searchID(phonenumber){
+          try{
+            currentPhoneNumber = phonenumber
+            console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
+            let seachredID = await  mongodb.findUserByNumber(currentPhoneNumber);
+          } catch(err){
+          console.log(err)
+        }
+      }
 
 
           //Privatchat zwischen zwei Usern
