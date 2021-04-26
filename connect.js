@@ -47,9 +47,8 @@ function findUserById(userId) {
             console.log("Response Recieved")
             console.log("das Ist der Value in Connect.js" + value)
             return value
-        }
-        ).catch(err)
-            console.log(err)
+        }).catch()
+            console.log("Hat in Connect nicht geklappt")
 
         };
 
