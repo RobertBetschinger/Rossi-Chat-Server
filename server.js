@@ -43,8 +43,8 @@
               };
               //Für Timo:
               //Abspeichern des neuen Nutzers in der ID-Database
-              mongodb.connect();
-              mongodb.addNewUser(UserObject);
+              mongodb.await.connect();
+              mongodb.await.addNewUser(UserObject);
               
               console.log(UserObject);
               console.log("createdUser");
