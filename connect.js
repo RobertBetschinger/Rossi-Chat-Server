@@ -32,15 +32,16 @@ function addNewUser(userObject){
 function findUserById(userId) {
     User.findOne({"userId":userId},function(err,user){
         if (err) return handleError (err);
-        console.log('Entry found: %s %s %s', user.userId, user.phonenumber,
-        user.pseudonym);
+        console.log('Entry found: %s %s %s', user.userId, user.number,
+        user.pseudonym)
+        return (user);
     })
 };
 
 function findUserByNumber(number) {
     User.findOne({"number":number},function(err,user){
         if (err) return handleError (err);
-        console.log('Entry found: %s %s %s', user.userId, user.phonenumber,
+        console.log('Entry found: %s %s %s', user.userId, user.number,
         user.pseudonym)
         return (user.userId);  
     })
@@ -56,11 +57,12 @@ function addMessage(message) {
     });
 };
 
-function findMessage(messageId) {
-    Message.findOne({"messageId":messageId},function(err,message){
+function findMessage(userId) {
+    Message.findOne({"receiverId":userId},function(err,message){
         if (err) return handleError (err);
-        console.log('Entry found: %s %s %s', message.messageId, message.creatorId,
-        message.Message);
+        console.log('Entry found: %s %s %s', message.messageId, message.senderId,
+        message.messageContent)
+        return message;
     })
 };
 
