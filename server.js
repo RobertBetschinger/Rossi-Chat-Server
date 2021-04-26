@@ -2,27 +2,28 @@
         var server = require("http").createServer(app);
         var io = require("socket.io")(server);
         const cors = require("cors");
-
         const router = require("./router");
         const PORT = process.env.PORT || 5000;
-
         const mongodb = require("./connect");
 
+
+        //array with socketsId and the corresponding permanentID
         const usersCurrentlyOnline = [];
 
         io.on("connection", function (socket) {
           console.log("a user connected");
 
-          //Disconnect
-          socket.on("disconnect", function () {
-            console.log("user disconnected");
-            for (let i = 0; i < usersCurrentlyOnline.length; i++) {
-              if (usersCurrentlyOnline[i].id === socket.id) {
-                usersCurrentlyOnline.splice(i, 1);
-              }
-            }
-          });
+              //Disconnect
+              socket.on("disconnect", function () {
+                console.log("user disconnected");
+                for (let i = 0; i < usersCurrentlyOnline.length; i++) {
+                  if (usersCurrentlyOnline[i].id === socket.id) {
+                    usersCurrentlyOnline.splice(i, 1);
+                  }
+                }
+              });
 
+              //Re-Einloggen in das Netzwerk, trägt User in Currently Online DB ein
           socket.on("send-user-id", (arg1, answer) => {
             console.log(arg1);
             usersCurrentlyOnline.push({
@@ -31,6 +32,7 @@
             });
           });
 
+          //erstmaliges Einloggen
           socket.on("request-registration", (object, answer) => {
             try {
               var id = ID();
@@ -46,30 +48,25 @@
               
               console.log(UserObject);
               console.log("createdUser");
+              //Was ist das hier???
               const privMessageObj = {
                 userId: id,
               };
               console.log(privMessageObj);
-              answer(privMessageObj);
+              answer(UserObject);
             } catch (error) {
               console.error(error);
               answer(false);
             }
           });
 
-          socket.on("datenbank-ausgeben", (answer)=>{
-                try{
-                  datenbankobject = dbmod.requestIddbcontent()
-                  console.log("Die ganze datenbank")
-                  console.log(datenbankobject)
-                  answer(datenbankobject)
-                }catch(error){
-                  console.error(error);
-                  answer(false)
-                }
+    
 
 
-          })
+          //Schritte die wir heute machen sollten:
+          //1. User Registrieren
+          //2. Chat aufbauen
+          //3. Nachricht Privat verschicken.
 
         
 
@@ -120,7 +117,7 @@
                 answer(false);
               }
             } else {
-              //Für Timo
+              //Für Timo, In nicht zugestellte Nachrichten abspeichern.
               
             }
           });
@@ -142,9 +139,21 @@
           });
 });
 
+//Funktionen Die nicht im Socket.io event stattfinden
+
+
+
+
         function lookUpChatPartners(chatId){
           //Searches in ChatDatabase all Chat pArtners, returns array
         }
+
+
+
+
+
+
+
 
 
         function getSocketId(receiverId){
