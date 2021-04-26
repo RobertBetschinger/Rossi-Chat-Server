@@ -7,6 +7,8 @@
         const mongodb = require("./connect");
 
         const User = require('./models/user.model');
+const { resolve } = require("path");
+const { rejects } = require("assert");
 
 
         //array with socketsId and the corresponding permanentID
@@ -91,20 +93,16 @@
           //Bug
           socket.on("request-chatpartner-receiverId",(object,answer)=>{
             try{
-              currentPhoneNumber = object.phonenumber
-              console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
+               currentPhoneNumber = object.phonenumber
+               console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
                let seachredID =  mongodb.findUserByNumber(currentPhoneNumber);
               console.log("Das ist die gefundene ID:" + seachredID)
-              
-
-
-                answer(seachredID)
-
-            } catch{
-              console.log("Hat nicht geklappt")
-              answer(false)
+            }catch(err){
+              console.log(err)
             }
-          });
+              
+          
+        });
 
 
           //Privatchat zwischen zwei Usern

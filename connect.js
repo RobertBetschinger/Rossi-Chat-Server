@@ -38,12 +38,13 @@ function findUserById(userId) {
 };
 
 async function findUserByNumber(number) {
-    await User.findOne({"number":number},function(err,user){
+   const response = await User.findOne({"number":number},function(err,user){
         if (err) return handleError (err);
         console.log('Entry found: %s %s %s', user.userId, user.number,
         user.spitzname)
-        return (user.userId);  
     })
+    console.log("Response Recieved")
+    return response
 };
 
 function addMessage(message) {
