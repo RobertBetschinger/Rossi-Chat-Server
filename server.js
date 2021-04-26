@@ -84,7 +84,7 @@ io.on("connection", function (socket) {
     
     var board = await mongodb.findUserByNumber(currentPhoneNumber)
     console.log(board.userId)
-    answer(board)
+    answer(board.userId)
 
     });
     
