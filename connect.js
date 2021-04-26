@@ -60,6 +60,7 @@ function findUserById(userId) {
       user.spitzname
     )
 })
+console.log(typeof(response))
 return response
 };
 
@@ -96,6 +97,8 @@ function deleteMessage(messageId) {
     );
   });
 }
+
+
 
 module.exports = {
   connect,
