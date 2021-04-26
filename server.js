@@ -9,9 +9,13 @@
 
         //array with socketsId and the corresponding permanentID
         const usersCurrentlyOnline = [];
-
-        io.on("connection", function (socket) {
+ io.on("connection", function (socket) {
           console.log("a user connected");
+
+          var connectionStatus = mongodb.connect();
+          console.log(connectionStatus);
+
+
 
               //Disconnect
               socket.on("disconnect", function () {
@@ -43,16 +47,11 @@
               };
               //Für Timo:
               //Abspeichern des neuen Nutzers in der ID-Database
-              mongodb.connect();
-              mongodb.addNewUser(UserObject);
-              
+              //mongodb.connect();
+             var abspeichernStatus = mongodb.addNewUser(UserObject);
+              console.log(abspeichernStatus)
               console.log(UserObject);
               console.log("createdUser");
-              //Was ist das hier???
-              const privMessageObj = {
-                userId: id,
-              };
-              console.log(privMessageObj);
               answer(UserObject);
             } catch (error) {
               console.error(error);
