@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const mongoose = require ("mongoose");
 require("./models/user.model.js");
 require("./models/message.model.js");
