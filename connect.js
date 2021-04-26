@@ -50,6 +50,7 @@ function findUserById(userId) {
 }
 
 async function findUserByNumber(number) {
+  var kurzzeitig
   const response = await User.findOne({ number: number }, function (err, user) {
     if (err) return handleError(err);
     console.log(
@@ -58,12 +59,14 @@ async function findUserByNumber(number) {
       user.number,
       user.spitzname
     );
+
+    kurzzeitig = user.userId
   }).exec();
 
 
   console.log("Das ist hundertpro richtig" +response);
   console.log(typeof(response));
-  return response.userId
+  return kurzzeitig
 }
 
 function addMessage(message) {

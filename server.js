@@ -83,12 +83,13 @@ io.on("connection", function (socket) {
     currentPhoneNumber = object.phonenumber;
     console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber);
     let seachredID = mongodb.findUserByNumber(currentPhoneNumber);
+    console.log("das ist die momentane searchedId die jetzt sofort an den callback gegeben wird" + seachredID)
     answer(seachredID);
   });
 
 
 
-  
+
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", (message, answer) => {
     console.log(message);
