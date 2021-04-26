@@ -95,6 +95,7 @@ const { rejects } = require("assert");
 
            
             var response = searchID(object.phonenumber)
+            console.log("Das ist der Response" + response)
             answer(response)
               
           
@@ -104,7 +105,8 @@ const { rejects } = require("assert");
           try{
             currentPhoneNumber = phonenumber
             console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
-            let seachredID = await  mongodb.findUserByNumber(currentPhoneNumber);
+            let seachredID = await mongodb.findUserByNumber(currentPhoneNumber);
+            return seachredID
           } catch(err){
           console.log(err)
         }
