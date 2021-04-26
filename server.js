@@ -88,15 +88,17 @@
 
 
           //Privatchat eröffnen
+          //Bug
           socket.on("request-chatpartner-receiverId",(object,answer)=>{
             try{
               currentPhoneNumber = object.number
-              console.log(currentPhoneNumber)
-              var searchedNumber = mongodb.findUserByNumber(currentPhoneNumber);
-              console.log(searchedNumber)
+              console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
+              var seachredID = mongodb.findUserByNumber(currentPhoneNumber);
+              console.log("Das ist die gefundene ID:")
+              console.log(seachredID)
 
 
-                answer(searchedNumber)
+                answer(seachredID)
 
             } catch{
               console.log("Hat nicht geklappt")
