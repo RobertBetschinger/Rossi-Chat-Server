@@ -91,11 +91,11 @@
           //Bug
           socket.on("request-chatpartner-receiverId",(object,answer)=>{
             try{
-              currentPhoneNumber = object.number
+              currentPhoneNumber = object.phonenumber
               console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
               var seachredID = mongodb.findUserByNumber(currentPhoneNumber);
-              console.log("Das ist die gefundene ID:")
-              console.log(seachredID)
+              console.log("Das ist die gefundene ID:" + seachredID)
+              
 
 
                 answer(seachredID)
