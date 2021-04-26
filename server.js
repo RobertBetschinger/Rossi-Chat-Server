@@ -43,23 +43,22 @@
             try {
               var id = ID();
               const preUserObject = {
-                userId: "Das ist eine UserID",
-                number: "Das ist eine Telefonnummer",
-                spitzname: "Das ist ein Kolibri"
+                userId: id,
+                number: "object.phonumber",
+                spitzname: "Nudelsalat ist ..."
               };
               
               console.log("Neue Methode")
               const registnewUser = new User({preUserObject})
               mongodb.addNewUser(registnewUser)
               //mongodb.connect();
-              console.log("alte Methode")
-              var abspeichernStatus = mongodb.addNewUser(preUserObject);
-              console.log(abspeichernStatus)
+             
+              
 
               console.log("Ausgabe des Users")
               console.log(preUserObject);
               console.log("createdUser");
-              answer(UserObject);
+              answer(preUserObject);
             } catch (error) {
               console.error(error);
               answer(false);
