@@ -6,6 +6,8 @@
         const PORT = process.env.PORT || 5000;
         const mongodb = require("./connect");
 
+        const User = require('./models/user.model');
+
 
         //array with socketsId and the corresponding permanentID
         const usersCurrentlyOnline = [];
@@ -40,17 +42,22 @@
           socket.on("request-registration", (object, answer) => {
             try {
               var id = ID();
-              const UserObject = {
+              const preUserObject = {
                 userId: "Das ist eine UserID",
                 number: "Das ist eine Telefonnummer",
                 spitzname: "Das ist ein Kolibri"
               };
-              //Für Timo:
-              //Abspeichern des neuen Nutzers in der ID-Database
+              
+              console.log("Neue Methode")
+              const registnewUser = new User({preUserObject})
+              mongodb.addNewUser(registnewUser)
               //mongodb.connect();
-             var abspeichernStatus = mongodb.addNewUser(UserObject);
+              console.log("alte Methode")
+              var abspeichernStatus = mongodb.addNewUser(UserObject);
               console.log(abspeichernStatus)
-              console.log(UserObject);
+
+              console.log("Ausgabe des Users")
+              console.log(preUserObject);
               console.log("createdUser");
               answer(UserObject);
             } catch (error) {
