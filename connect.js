@@ -32,7 +32,7 @@ function addNewUser(userObject){
 function findUserById(userId) {
     User.findOne({"userId":userId},function(err,user){
         if (err) return handleError (err);
-        console.log('Entry found: %s %s %s', user.userId, user.phonenumber,
+        console.log('Entry found: %s %s %s', user.userId, user.number,
         user.pseudonym);
     })
 };
@@ -40,7 +40,7 @@ function findUserById(userId) {
 function findUserByNumber(number) {
     User.findOne({"number":number},function(err,user){
         if (err) return handleError (err);
-        console.log('Entry found: %s %s %s', user.userId, user.phonenumber,
+        console.log('Entry found: %s %s %s', user.userId, user.number,
         user.pseudonym)
         return (user.userId);  
     })

@@ -47,17 +47,13 @@
                 number: object.phonenumber,
                 spitzname: "Das ist ein Kolibri"
               };
-              
-              console.log("Neue Methode")
+              console.log("Neue Methode und alte methode gemixed")
               var abspeichernStatus = mongodb.addNewUser(preUserObject);
               console.log(abspeichernStatus)
-              mongodb.addNewUser(registnewUser)
-            
-
               console.log("Ausgabe des Users")
               console.log(preUserObject);
               console.log("createdUser");
-              answer(UserObject);
+              answer(preUserObject);
             } catch (error) {
               console.error(error);
               answer(false);
@@ -94,10 +90,16 @@
           //Privatchat eröffnen
           socket.on("request-chatpartner-receiverId",(object,answer)=>{
             try{
+              currentPhoneNumber = object.number
+              console.log(currentPhoneNumber)
+              var searchedNumber = mongodb.findUserByNumber(currentPhoneNumber);
+              console.log(searchedNumber)
 
-                answer()
+
+                answer(searchedNumber)
 
             } catch{
+              console.log("Hat nicht geklappt")
               answer(false)
             }
           });
