@@ -59,9 +59,11 @@ async function findUserByNumber(number) {
       user.spitzname
     );
   }).exec();
+
+
   console.log("Das ist hundertpro richtig" +response);
-  console.log(user);
-  return response
+  console.log(typeof(response));
+  return response.userId
 }
 
 function addMessage(message) {

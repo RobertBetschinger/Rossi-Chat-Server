@@ -86,6 +86,9 @@ io.on("connection", function (socket) {
     answer(seachredID);
   });
 
+
+
+  
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", (message, answer) => {
     console.log(message);
