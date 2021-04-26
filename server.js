@@ -103,7 +103,7 @@ io.on("connection", function (socket) {
     if (isOnline(message.receiverId)) {
       try {
         var receiverSocketId = getSocketId(message.receiverId);
-        // socket.broadcast.to(receiverSocketId).emit("recieve-chat-message-private",message)
+        socket.broadcast.to(receiverSocketId).emit("recieve-chat-message-private",message)
         console.log("Sended Message");
         answer(true);
       } catch {
