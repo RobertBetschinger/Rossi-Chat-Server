@@ -53,7 +53,7 @@
               mongodb.addNewUser(registnewUser)
               //mongodb.connect();
               console.log("alte Methode")
-              var abspeichernStatus = mongodb.addNewUser(UserObject);
+              var abspeichernStatus = mongodb.addNewUser(preUserObject);
               console.log(abspeichernStatus)
 
               console.log("Ausgabe des Users")
