@@ -37,11 +37,11 @@ function findUserById(userId) {
     })
 };
 
-function findUserByNumber(number) {
+async function findUserByNumber(number) {
     User.findOne({"number":number},function(err,user){
         if (err) return handleError (err);
         console.log('Entry found: %s %s %s', user.userId, user.number,
-        user.pseudonym)
+        user.spitzname)
         return (user.userId);  
     })
 };

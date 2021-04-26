@@ -93,7 +93,7 @@
             try{
               currentPhoneNumber = object.phonenumber
               console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
-              var seachredID = mongodb.findUserByNumber(currentPhoneNumber);
+              var seachredID = await mongodb.findUserByNumber(currentPhoneNumber);
               console.log("Das ist die gefundene ID:" + seachredID)
               
 
