@@ -38,7 +38,7 @@ function findUserById(userId) {
 };
 
 async function findUserByNumber(number) {
-    User.findOne({"number":number},function(err,user){
+    await User.findOne({"number":number},function(err,user){
         if (err) return handleError (err);
         console.log('Entry found: %s %s %s', user.userId, user.number,
         user.spitzname)
