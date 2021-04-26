@@ -93,7 +93,7 @@ const { rejects } = require("assert");
           //Bug
           socket.on("request-chatpartner-receiverId",(object,answer)=>{
 
-            currentPhoneNumber = phonenumber
+            currentPhoneNumber = object.phonenumber
             console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
             let seachredID =  mongodb.findUserByNumber(currentPhoneNumber);
            answer(seachredID)
