@@ -42,10 +42,16 @@ function findUserById(userId) {
         if (err) return handleError (err);
         console.log('Entry found: %s %s %s', user.userId, user.number,
         user.spitzname)
-    })
-    console.log("Response Recieved")
-    return response
+    }).then(
+        function(){
+            console.log("Response Recieved")
+            return response
+        }
+    )
+    
 };
+
+
 
 function addMessage(message) {
     var message = new Message(message);
