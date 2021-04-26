@@ -27,11 +27,20 @@ function addNewUser(userObject){
     });
 };
 
-function findUser(userId) {
+function findUserById(userId) {
     User.findOne({"userId":userId},function(err,user){
         if (err) return handleError (err);
         console.log('Entry found: %s %s %s', user.userId, user.phonenumber,
         user.pseudonym);
+    })
+};
+
+function findUserByNumber(number) {
+    User.findOne({"number":number},function(err,user){
+        if (err) return handleError (err);
+        console.log('Entry found: %s %s %s', user.userId, user.phonenumber,
+        user.pseudonym)
+        return (user.userId);  
     })
 };
 
@@ -62,5 +71,5 @@ function deleteMessage(messageId) {
 };
 
 
-module.exports = {connect, addNewUser, addMessage, findUser, findMessage, deleteMessage};
+module.exports = {connect, addNewUser, addMessage, findUserById, findUserByNumber, findMessage, deleteMessage};
 
