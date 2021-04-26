@@ -45,13 +45,12 @@ function findUserById(userId) {
     }).then(
         function(value){
             console.log("Response Recieved")
+            console.log("das Ist der Value in Connect.js" + value)
             return response},
         function(error) {
           console.log("das wars für mich") 
         }
         )
-        
-    
     
 };
 

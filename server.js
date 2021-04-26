@@ -96,7 +96,13 @@ const { rejects } = require("assert");
            
             var response = searchID(object.phonenumber)
             console.log("Das ist der Response" + response)
-            answer(response)
+            response.then(
+              function(val){
+                console.log("Das ist der Response nicht mehr als promise" + response)
+                console.log("das ist der value:" + val)
+                 answer(response)
+              }
+            )
               
           
         });
