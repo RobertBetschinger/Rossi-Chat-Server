@@ -93,30 +93,17 @@ const { rejects } = require("assert");
           //Bug
           socket.on("request-chatpartner-receiverId",(object,answer)=>{
 
-           
-            var response = searchID(object.phonenumber)
-            console.log("Das ist der Response" + response)
-            response.then(
-              function(val){
-                console.log("Das ist der Response nicht mehr als promise" + response)
-                console.log("das ist der value:" + val)
-                 answer(response)
-              }
-            )
+            currentPhoneNumber = phonenumber
+            console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
+            let seachredID =  mongodb.findUserByNumber(currentPhoneNumber);
+           answer(seachredID)
+          
+            
               
           
         });
 
-        async function searchID(phonenumber){
-          try{
-            currentPhoneNumber = phonenumber
-            console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber)
-            let seachredID = await mongodb.findUserByNumber(currentPhoneNumber);
-            return seachredID
-          } catch(err){
-          console.log(err)
-        }
-      }
+       
 
 
           //Privatchat zwischen zwei Usern
