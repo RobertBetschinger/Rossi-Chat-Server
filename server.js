@@ -79,15 +79,12 @@ io.on("connection", function (socket) {
 
   //Privatchat eröffnen
   //Bug
-  socket.on("request-chatpartner-receiverId", (object, answer) => {
+  socket.on("request-chatpartner-receiverId", async function(object, answer) {
     currentPhoneNumber = object.phonenumber;
-    console.log("Das ist die zu suchende Nummer:" + currentPhoneNumber);
-    let seachredID = mongodb.findUserByNumber(currentPhoneNumber);
-
-    seachredID.then((object)=> {
-    console.log(object.userId)
-    answer(object.userId)
-    })
+    
+    var board = await mongodb.findUserByNumber(currentPhoneNumber)
+    console.log(board)
+    answer(board)
 
     });
     

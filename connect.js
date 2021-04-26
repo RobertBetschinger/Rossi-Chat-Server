@@ -49,25 +49,19 @@ function findUserById(userId) {
   });
 }
 
-async function findUserByNumber(number) {
-  var kurzzeitig
-  const response = await User.findOne({ number: number }, function (err, user) {
+ function findUserByNumber(number) {
+
+  const response = User.findOne({ number: number }, function (err, user) {
     if (err) return handleError(err);
     console.log(
       "Entry found: %s %s %s",
       user.userId,
       user.number,
       user.spitzname
-    );
-
-    kurzzeitig = user.userId
-  }).exec();
-
-
-  console.log("Das ist hundertpro richtig" +response);
-  console.log(typeof(response));
-  return kurzzeitig
-}
+    )
+})
+return response
+};
 
 function addMessage(message) {
   var message = new Message(message);
