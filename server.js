@@ -49,12 +49,10 @@
               };
               
               console.log("Neue Methode")
-              const registnewUser = new User({preUserObject})
+              var abspeichernStatus = mongodb.addNewUser(preUserObject);
+              console.log(abspeichernStatus)
               mongodb.addNewUser(registnewUser)
-              //mongodb.connect();
-              //console.log("alte Methode")
-             // var abspeichernStatus = mongodb.addNewUser(preUserObject);
-             // console.log(abspeichernStatus)
+            
 
               console.log("Ausgabe des Users")
               console.log(preUserObject);
