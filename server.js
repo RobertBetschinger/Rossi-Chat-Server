@@ -101,13 +101,14 @@ io.on("connection", function (socket) {
     //Funktion die alle Empfäner IDs aus
     //receiverID = Permanent ID of other User
     if (isOnline(message.receiverId)) {
+      console.log("the current Chat partner ist online")
       try {
         var receiverSocketId = getSocketId(message.receiverId);
         socket.broadcast.to(receiverSocketId).emit("recieve-chat-message-private",message)
         console.log("Sended Message");
         answer(true);
       } catch {
-        console.error(error);
+        console.log("hat nicht geklappt");
         answer(false);
       }
     } else {
