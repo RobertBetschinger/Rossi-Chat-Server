@@ -43,11 +43,15 @@ function findUserById(userId) {
         console.log('Entry found: %s %s %s', user.userId, user.number,
         user.spitzname)
     }).then(
-        function(){
+        function(value){
             console.log("Response Recieved")
-            return response
+            return response},
+        function(error) {
+          console.log("das wars für mich") 
         }
-    )
+        )
+        
+    
     
 };
 
