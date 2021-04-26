@@ -37,14 +37,14 @@
             try {
               var id = ID();
               const UserObject = {
-                userId: id,
-                number: object.phonenumber,
-                spitzname: "Das ist ein Kolibri",
+                userId: "Das ist eine UserID",
+                number: "Das ist eine Telefonnummer",
+                spitzname: "Das ist ein Kolibri"
               };
               //Für Timo:
               //Abspeichern des neuen Nutzers in der ID-Database
-              mongodb.await.connect();
-              mongodb.await.addNewUser(UserObject);
+              mongodb.connect();
+              mongodb.addNewUser(UserObject);
               
               console.log(UserObject);
               console.log("createdUser");
