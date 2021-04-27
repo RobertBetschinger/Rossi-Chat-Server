@@ -95,11 +95,14 @@ io.on("connection", function (socket) {
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", (message, answer) => {
-    console.log(message);
+    console.log("das ist die ReceiverID" + message.receiverId)
+    console.log("das sind alle User die online sind")
+    console.dir(userCurrentlyOnline, {'maxArrayLength': null})
 
     //Search Empfänger ID by Chat ID, momentan wird davon ausgegangen das die Empfänger ID mitgesendet wird
     //Funktion die alle Empfäner IDs aus
     //receiverID = Permanent ID of other User
+    console.log("Das istdie Wahrheut darüber ob der Chat Partner Online ist"+ isOnline(message.receiverId))
     if (isOnline(message.receiverId)) {
       console.log("the current Chat partner ist online")
       try {
@@ -107,7 +110,8 @@ io.on("connection", function (socket) {
         socket.broadcast.to(receiverSocketId).emit("recieve-chat-message-private",message)
         console.log("Sended Message");
         answer(true);
-      } catch {
+      } catch(err){
+        console.log(err)
         console.log("hat nicht geklappt");
         answer(false);
       }
