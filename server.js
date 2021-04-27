@@ -141,7 +141,7 @@ function lookUpChatPartners(chatId) {
   //Searches in ChatDatabase all Chat pArtners, returns array
 }
 
-function getSocketId(receiverId) {
+function getSocketId(recevierId) {
   for (let i = 0; i < usersCurrentlyOnline.length; i++) {
     if (usersCurrentlyOnline[i].PermanentUserID === recevierId) {
       //Return Socket ID
