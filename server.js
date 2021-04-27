@@ -107,6 +107,7 @@ io.on("connection", function (socket) {
       console.log("the current Chat partner ist online")
       try {
         var receiverSocketId = getSocketId(message.receiverId);
+        console.log("Dort Senden wir hin:" + receiverSocketId)
         socket.broadcast.to(receiverSocketId).emit("recieve-chat-message-private",message)
         console.log("Sended Message");
         answer(true);
