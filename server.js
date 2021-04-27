@@ -143,7 +143,8 @@ function lookUpChatPartners(chatId) {
 
 function getSocketId(receiverId) {
   for (let i = 0; i < usersCurrentlyOnline.length; i++) {
-    if (usersCurrentlyOnline[i].PermanentUserID === receiverPermanentId) {
+    if (usersCurrentlyOnline[i].PermanentUserID === recevierId) {
+      //Return Socket ID
       return usersCurrentlyOnline.id;
     }
     return null;
