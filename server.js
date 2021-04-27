@@ -146,7 +146,8 @@ function getSocketId(recevierId) {
   for (let i = 0; i < usersCurrentlyOnline.length; i++) {
     if (usersCurrentlyOnline[i].PermanentUserID === recevierId) {
       //Return Socket ID
-      return usersCurrentlyOnline.id;
+      console.log(usersCurrentlyOnline[i].id)
+      return usersCurrentlyOnline[i].id;
     }
   }
   return null;
