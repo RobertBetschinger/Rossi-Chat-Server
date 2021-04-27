@@ -148,8 +148,8 @@ function getSocketId(recevierId) {
       //Return Socket ID
       return usersCurrentlyOnline.id;
     }
-    return null;
   }
+  return null;
 }
 
 function isOnline(onlinePermanentId) {
