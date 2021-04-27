@@ -97,7 +97,7 @@ io.on("connection", function (socket) {
   socket.on("send-chat-message-privat", (message, answer) => {
     console.log("das ist die ReceiverID" + message.receiverId)
     console.log("das sind alle User die online sind")
-    console.dir(userCurrentlyOnline, {'maxArrayLength': null})
+    console.dir(usersCurrentlyOnline, {'maxArrayLength': null})
 
     //Search Empfänger ID by Chat ID, momentan wird davon ausgegangen das die Empfänger ID mitgesendet wird
     //Funktion die alle Empfäner IDs aus
