@@ -74,8 +74,10 @@ function addMessage(message) {
   });
 }
 
-function findMessage(messageId) {
-  Message.findOne({ messageId: messageId }, function (err, message) {
+//Methode um 
+function findMessagesForUser(messageId) {
+  var messages = []; 
+  messages = Message.findOne({ messageId: messageId }, function (err, message) {
     if (err) return handleError(err);
     console.log(
       "Entry found: %s %s %s",
@@ -84,8 +86,11 @@ function findMessage(messageId) {
       message.Message
     );
   });
+  console.log(messages)
+  return messages
 }
 
+//Brauchen wir anfangs nicht
 function deleteMessage(messageId) {
   Message.findOneAndDelete({ messageId: messageId }, function (err, message) {
     if (err) return handleError(err);
@@ -100,12 +105,14 @@ function deleteMessage(messageId) {
 
 
 
+
+
 module.exports = {
   connect,
   addNewUser,
   addMessage,
   findUserById,
   findUserByNumber,
-  findMessage,
+  findMessagesForUser,
   deleteMessage,
 };

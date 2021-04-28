@@ -12,6 +12,7 @@ const { rejects } = require("assert");
 
 //array with socketsId and the corresponding permanentID
 const usersCurrentlyOnline = [];
+
 io.on("connection", function (socket) {
   console.log("a user connected");
 
@@ -59,74 +60,67 @@ io.on("connection", function (socket) {
     }
   });
 
-  //Schritte die wir heute machen sollten:
-  //1. User Registrieren
-  //2. Chat aufbauen
-  //3. Nachricht Privat verschicken.
-
-  socket.on("change-phonenumber", (object, answer) => {
-    //Für Timo: Datenbankanbindung
-  });
-
-  socket.on("change-pseudonym", (object, answer) => {
-    //Für Timo: Datenbankanbindung
-  });
-
-  //Nur für Gruppenchat
-  socket.on("open-new-Chat", (object, answer) => {
-    //Telefonnummer mit PermanentID in Datenbank abgleichen
-  });
-
   //Privatchat eröffnen
-  //Bug
-  socket.on("request-chatpartner-receiverId", async function(object, answer) {
+  //Hier die Variablen noch verbessern
+  socket.on("request-chatpartner-receiverId", async function (object, answer) {
     currentPhoneNumber = object.phonenumber;
-    
-    var board = await mongodb.findUserByNumber(currentPhoneNumber)
-    console.log(board.userId)
-    answer(board.userId)
-
-    });
-    
- 
-
-
-
+    var user = await mongodb.findUserByNumber(currentPhoneNumber);
+    console.log(user.userId);
+    answer(user.userId);
+  });
 
   //Privatchat zwischen zwei Usern
-  socket.on("send-chat-message-privat", (message, answer) => {
-    console.log("das ist die ReceiverID" + message.receiverId)
-    console.log("das sind alle User die online sind")
-    console.dir(usersCurrentlyOnline, {'maxArrayLength': null})
+  socket.on("send-chat-message-privat", async function (message, answer) {
+    console.log("das ist die ReceiverID" + message.receiverId);
+    console.log("das sind alle User die online sind");
+    console.dir(usersCurrentlyOnline, { maxArrayLength: null });
 
     //Search Empfänger ID by Chat ID, momentan wird davon ausgegangen das die Empfänger ID mitgesendet wird
     //Funktion die alle Empfäner IDs aus
     //receiverID = Permanent ID of other User
-    console.log("Das istdie Wahrheut darüber ob der Chat Partner Online ist"+ isOnline(message.receiverId))
+    console.log(
+      "Das istdie Wahrheut darüber ob der Chat Partner Online ist" +
+        isOnline(message.receiverId)
+    );
     if (isOnline(message.receiverId)) {
-      console.log("the current Chat partner ist online")
+      console.log("the current Chat partner ist online");
       try {
         var receiverSocketId = getSocketId(message.receiverId);
-        console.log("Dort Senden wir hin:" + receiverSocketId)
-        socket.broadcast.to(receiverSocketId).emit("recieve-chat-message-private",message)
+        console.log("Dort Senden wir hin:" + receiverSocketId);
+        socket.broadcast
+          .to(receiverSocketId)
+          .emit("recieve-chat-message-private", message);
         console.log("Sended Message");
         answer(true);
-      } catch(err){
-        console.log(err)
+      } catch (err) {
+        console.log(err);
         console.log("hat nicht geklappt");
         answer(false);
       }
     } else {
-      //Für Timo, In nicht zugestellte Nachrichten abspeichern.
+      // Für Timo, In nicht zugestellte Nachrichten abspeichern.
+      // await mongoDb.addMessage(message)
+      // answer(false);    
     }
   });
 
-  socket.on("got-new-messages?", (data, answer) => {
+//1. Nachrichten abspeichern die nicht zugestellt werden könnnen.
+//2. Nachrichten abrufen können, wennn man dann weider online geht.
+//   Dazum Muss die Funktion in Channel.JS geschrieben werden, FRAglich hierbei mit CHAT ID
+//   Müssen wir die Chats, also die Gruppen abspeichern?
+
+
+
+  socket.on("got-new-messages?", async function (data, answer)  {
     try {
       //Für Timo: Funktion die überprüft ob Nachrichten vorhanden sind für die permanent UserID
+      //Mit Welcher ID soll überprüft werden ob chats da sind
+      var yourMessages = []
+      yourMessages = await mongoDb.findMessagesForUser();
 
-      if ((msglist = ![])) answer(msglist);
-      else {
+      if (yourMessages.length >= 0) {
+        answer(msglist);
+      } else {
         answer("No Messages For you, du hast keine Freunde");
       }
     } catch {
@@ -136,7 +130,17 @@ io.on("connection", function (socket) {
   });
 });
 
+socket.on("change-phonenumber", (object, answer) => {
+  //Für Timo: Datenbankanbindung
+});
+
+socket.on("change-pseudonym", (object, answer) => {
+  //Für Timo: Datenbankanbindung
+});
+
+//
 //Funktionen Die nicht im Socket.io event stattfinden
+//
 
 function lookUpChatPartners(chatId) {
   //Searches in ChatDatabase all Chat pArtners, returns array
@@ -146,7 +150,7 @@ function getSocketId(recevierId) {
   for (let i = 0; i < usersCurrentlyOnline.length; i++) {
     if (usersCurrentlyOnline[i].PermanentUserID === recevierId) {
       //Return Socket ID
-      console.log(usersCurrentlyOnline[i].id)
+      console.log(usersCurrentlyOnline[i].id);
       return usersCurrentlyOnline[i].id;
     }
   }
