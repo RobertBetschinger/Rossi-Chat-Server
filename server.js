@@ -76,7 +76,7 @@ io.on("connection", function (socket) {
     console.dir(usersCurrentlyOnline, { maxArrayLength: null });
 
     //Search Empfänger ID by Chat ID, momentan wird davon ausgegangen das die Empfänger ID mitgesendet wird
-    //Funktion die alle Empfäner IDs aus
+    //Funktion die alle Empfäner IDs ausgibt
     //receiverID = Permanent ID of other User
     console.log(
       "Das istdie Wahrheut darüber ob der Chat Partner Online ist" +
@@ -100,7 +100,16 @@ io.on("connection", function (socket) {
     } else {
       // Für Timo, In nicht zugestellte Nachrichten abspeichern.
       // await mongoDb.addMessage(message)
-      // answer(false);    
+      // answer(false);
+      try {
+        messageadded =  await mongodb.addMessage(message);
+        if (messageadded = True) {
+          console.log("User offline and message added to DB")
+        }
+      } catch (err) {
+        console.log(err)
+        console.log("message could not be added to DB")
+      }    
     }
   });
 
@@ -113,8 +122,6 @@ io.on("connection", function (socket) {
 
   socket.on("got-new-messages?", async function (data, answer)  {
     try {
-      //Für Timo: Funktion die überprüft ob Nachrichten vorhanden sind für die permanent UserID
-      //Mit Welcher ID soll überprüft werden ob chats da sind
       var yourMessages = []
       yourMessages = await mongoDb.findMessagesForUser();
 

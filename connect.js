@@ -65,11 +65,13 @@ return response
 };
 
 function addMessage(message) {
+  var messageadded = False;
   var message = new Message(message);
   message.save((err, doc) => {
     if (!err) {
       console.log("Message added to db");
-      return doc;
+      messageadded = True;
+      return messageadded;
     }
   });
 }
