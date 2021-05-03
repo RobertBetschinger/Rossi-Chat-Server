@@ -131,7 +131,7 @@ io.on("connection", function (socket) {
       yourMessages = await mongodb.findMessagesForUser(data.myId);
       if (yourMessages.length >= 0) {
         console.log(yourMessages)
-        answer(msglist);
+        answer(yourMessages);
       } else {
         answer("No Messages For you, du hast keine Freunde");
       }
