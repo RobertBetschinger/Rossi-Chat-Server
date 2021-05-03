@@ -64,6 +64,7 @@ io.on("connection", function (socket) {
   //Hier die Variablen noch verbessern
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
     currentPhoneNumber = object.phonenumber;
+    console.log("Das ist die Nummer anhand er suchen soll" + currentPhoneNumber)
     var user = await mongodb.findUserByNumber(currentPhoneNumber);
     console.log(user.userId);
     answer(user.userId);
