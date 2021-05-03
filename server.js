@@ -80,7 +80,7 @@ io.on("connection", function (socket) {
     //receiverID = Permanent ID of other User
     console.log(
       "Das istdie Wahrheut darüber ob der Chat Partner Online ist" +
-      isOnline(message.receiverId)
+        isOnline(message.receiverId)
     );
     if (isOnline(message.receiverId)) {
       console.log("the current Chat partner ist online");
@@ -103,12 +103,12 @@ io.on("connection", function (socket) {
       // answer(false);
       try {
         messageadded = await mongodb.addMessage(message);
-        if (messageadded = True) {
-          console.log("User offline and message added to DB")
+        if ((messageadded = True)) {
+          console.log("User offline and message added to DB");
         }
       } catch (err) {
-        console.log(err)
-        console.log("message could not be added to DB")
+        console.log(err);
+        console.log("message could not be added to DB");
       }
     }
   });
@@ -118,11 +118,9 @@ io.on("connection", function (socket) {
   //   Dazum Muss die Funktion in Channel.JS geschrieben werden, FRAglich hierbei mit CHAT ID
   //   Müssen wir die Chats, also die Gruppen abspeichern?
 
-
-
   socket.on("got-new-messages?", async function (data, answer) {
     try {
-      var yourMessages = []
+      var yourMessages = [];
       yourMessages = await mongoDb.findMessagesForUser();
       if (yourMessages.length >= 0) {
         answer(msglist);
@@ -135,39 +133,54 @@ io.on("connection", function (socket) {
     }
   });
 
-
-
-
-socket.on("change-phonenumber", async function (userObject, newnumber, answer) {
-  //Für Timo: Datenbankanbindung
-  try {
-    numberchanged = await mongodb.changePhonenumber(userObject.userId, newnumber);
-    if (numberchanged = True) {
-      answer("Phonenumber of user" + userObject.userId + "has been changed to" + newnumber)
+  socket.on(
+    "change-phonenumber",
+    async function (userObject, newnumber, answer) {
+      //Für Timo: Datenbankanbindung
+      try {
+        numberchanged = await mongodb.changePhonenumber(
+          userObject.userId,
+          newnumber
+        );
+        if ((numberchanged = True)) {
+          answer(
+            "Phonenumber of user" +
+              userObject.userId +
+              "has been changed to" +
+              newnumber
+          );
+        }
+      } catch {
+        console.log(err);
+        answer(false);
+      }
     }
-  }
-  catch {
-    console.log(err)
-    answer(false)
-  }
-});
+  );
 
-socket.on("change-pseudonym", async function (userObject, newNickname, answer) {
-  //Für Timo: Datenbankanbindung
-  try {
-    nicknamechanged = await mongodb.changePseudonym(userObject.userId, newNickname);
-    if (nicknamechanged = True) {
-      answer("Phonenumber of user" + userObject.userId + "has been changed to" + newNickname)
+  socket.on(
+    "change-pseudonym",
+    async function (userObject, newNickname, answer) {
+      //Für Timo: Datenbankanbindung
+      try {
+        nicknamechanged = await mongodb.changePseudonym(
+          userObject.userId,
+          newNickname
+        );
+        if ((nicknamechanged = True)) {
+          answer(
+            "Phonenumber of user" +
+              userObject.userId +
+              "has been changed to" +
+              newNickname
+          );
+        }
+      } catch {
+        console.log(err);
+        answer(false);
+      }
     }
-  }
-  catch {
-    console.log(err)
-    answer(false)
-  }
-
+  );
 });
-
-
 
 //
 //Funktionen Die nicht im Socket.io event stattfinden
