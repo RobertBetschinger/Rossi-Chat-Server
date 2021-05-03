@@ -58,22 +58,19 @@ function findUserById(userId) {
 
 
 function findUserByNumber(number) {
-  const responseobject = User.findOne({ number: number }, function (err, user) {
-    response = false
-    if (err) {
-      return handleError(err)
-    };
-    console.log(
-      "Entry found: %s %s %s",
-      user.userId,
-      user.number,
-      user.spitzname
-    )
-    response = true
-  })
-  console.log(typeof (responseobject))
-  return response
-};
+  try {
+    const responseobject = User.findOne({ number: number }, function (err, user) {
+      console.log(responseobject)
+      console.log(typeof(responseobject))
+      return responseobject
+    })
+  } catch (error) {
+    console.log(error)
+    return null
+  }
+
+}
+
 
 //tryCatch
 function addMessage(message) {
