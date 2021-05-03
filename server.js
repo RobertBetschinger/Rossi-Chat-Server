@@ -128,7 +128,7 @@ io.on("connection", function (socket) {
   socket.on("got-new-messages?", async function (data, answer) {
     try {
       var yourMessages = [];
-      yourMessages = await mongoDb.findMessagesForUser(data.myId);
+      yourMessages = await mongodb.findMessagesForUser(data.myId);
       if (yourMessages.length >= 0) {
         console.log(yourMessages)
         answer(msglist);
