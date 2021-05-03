@@ -79,7 +79,7 @@ io.on("connection", function (socket) {
     //Funktion die alle Empfäner IDs ausgibt
     //receiverID = Permanent ID of other User
     console.log(
-      "Das istdie Wahrheut darüber ob der Chat Partner Online ist" +
+      "Das ist die Wahrheut darüber ob der Chat Partner Online ist" +
         isOnline(message.receiverId)
     );
     if (isOnline(message.receiverId)) {
@@ -103,7 +103,7 @@ io.on("connection", function (socket) {
       // answer(false);
       try {
         messageadded = await mongodb.addMessage(message);
-        if ((messageadded = True)) {
+        if ((messageadded === true)) {
           console.log("User offline and message added to DB");
         }
       } catch (err) {
@@ -142,7 +142,7 @@ io.on("connection", function (socket) {
           userObject.userId,
           newnumber
         );
-        if ((numberchanged = True)) {
+        if ((numberchanged === true)) {
           answer(
             "Phonenumber of user" +
               userObject.userId +
@@ -166,7 +166,7 @@ io.on("connection", function (socket) {
           userObject.userId,
           newNickname
         );
-        if ((nicknamechanged = True)) {
+        if ((nicknamechanged === true)) {
           answer(
             "Phonenumber of user" +
               userObject.userId +
@@ -181,6 +181,8 @@ io.on("connection", function (socket) {
     }
   );
 });
+
+
 
 //
 //Funktionen Die nicht im Socket.io event stattfinden

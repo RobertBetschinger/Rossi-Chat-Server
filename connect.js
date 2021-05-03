@@ -75,6 +75,7 @@ function findUserByNumber(number) {
   return response
 };
 
+//tryCatch
 function addMessage(message) {
   var messageadded = false;
   var message = new Message(message);
