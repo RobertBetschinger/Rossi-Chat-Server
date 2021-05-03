@@ -7,9 +7,9 @@ const msgSchema = new mongoose.Schema({
     },
     creatorId: String,
     timestamp: String,
-    chatId: String,
     Message: Object,
-    Pseudonym: String
+    Pseudonym: String,
+    receiverId:String
 });
 
 const Message = mongoose.model('Message', msgSchema);

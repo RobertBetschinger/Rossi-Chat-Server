@@ -70,6 +70,8 @@ io.on("connection", function (socket) {
     answer(user.userId);
   });
 
+
+
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
     console.log("das ist die ReceiverID" + message.receiverId);
@@ -80,7 +82,7 @@ io.on("connection", function (socket) {
     //Funktion die alle Empfäner IDs ausgibt
     //receiverID = Permanent ID of other User
     console.log(
-      "Das ist die Wahrheut darüber ob der Chat Partner Online ist" +
+      "Das ist die Wahrheut darüber ob der Chat Partner Online ist " +
         isOnline(message.receiverId)
     );
     if (isOnline(message.receiverId)) {
@@ -99,11 +101,15 @@ io.on("connection", function (socket) {
         answer(false);
       }
     } else {
-      // Für Timo, In nicht zugestellte Nachrichten abspeichern.
-      // await mongoDb.addMessage(message)
-      // answer(false);
       try {
-        messageadded = await mongodb.addMessage(message);
+        const messageObject = {
+          messageId: message.messageId,
+          creatorId: message.senderId,
+          timestamp:message.timestamp,
+          Message:message.messageContent,
+          receiverId:message.participantId,
+        };
+        messageadded = await mongodb.addMessage(messageObject);
         if ((messageadded === true)) {
           console.log("User offline and message added to DB");
         }

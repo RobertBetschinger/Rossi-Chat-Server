@@ -75,17 +75,23 @@ return response
 };
 
 
-//tryCatch
-function addMessage(message) {
-  var messageadded = false;
-  var message = new Message(message);
-  message.save((err, doc) => {
-    if (!err) {
-      console.log("Message added to db");
-      messageadded = true;
-      return messageadded;
-    }
-  });
+
+function addMessage(messageobject){
+  try {
+    console.log(messageobject)
+    var message = new Message(messageobject)
+    message.save((err, doc) => {
+      if (!err) {
+        console.log("Message added to db");
+        
+        return true;
+      }})
+  } catch (error) {
+    console.log(error)
+    console.log("coudnt add the message to db")
+    return false
+  }
+
 }
 
 //Methode um 
