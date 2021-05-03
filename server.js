@@ -135,8 +135,8 @@ io.on("connection", function (socket) {
       } else {
         answer("No Messages For you, du hast keine Freunde");
       }
-    } catch {
-      console.log(err);
+    } catch(error) {
+      console.log(error);
       answer(false);
     }
   });
