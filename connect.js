@@ -75,7 +75,7 @@ return response
 };
 
 
-
+//Klappt
 function addMessage(messageobject){
   try {
     console.log(messageobject)
@@ -91,21 +91,22 @@ function addMessage(messageobject){
     console.log("coudnt add the message to db")
     return false
   }
-
 }
 
 //Methode um 
-function findMessagesForUser(messageId) {
-  var messages = [];
-  messages = Message.findOne({ messageId: messageId }, function (err, message) {
-    if (err) return handleError(err);
-    console.log(
-      "Entry found: %s %s %s",
-      message.messageId,
-      message.creatorId,
-      message.Message
-    );
-  });
+function findMessagesForUser(receiverID) {
+  try {
+    var messages = [];
+    messages = Message.find({ receiverId: receiverID }, function (err, message) {
+      if (err) return handleError(err);
+      console.log(messages)
+      return messages
+    }); 
+  } catch (error) {
+    console.log(error)
+    return false
+  }
+
   console.log(messages)
   return messages
 }

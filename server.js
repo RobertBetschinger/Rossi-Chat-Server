@@ -107,7 +107,7 @@ io.on("connection", function (socket) {
           creatorId: message.senderId,
           timestamp:message.timestamp,
           Message:message.messageContent,
-          receiverId:message.participantId,
+          receiverId:message.receiverId,
         };
         messageadded = await mongodb.addMessage(messageObject);
         if ((messageadded === true)) {
@@ -128,8 +128,9 @@ io.on("connection", function (socket) {
   socket.on("got-new-messages?", async function (data, answer) {
     try {
       var yourMessages = [];
-      yourMessages = await mongoDb.findMessagesForUser();
+      yourMessages = await mongoDb.findMessagesForUser(data.myId);
       if (yourMessages.length >= 0) {
+        console.log(yourMessages)
         answer(msglist);
       } else {
         answer("No Messages For you, du hast keine Freunde");
