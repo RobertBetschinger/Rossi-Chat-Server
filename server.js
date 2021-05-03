@@ -76,11 +76,11 @@ io.on("connection", function (socket) {
     console.dir(usersCurrentlyOnline, { maxArrayLength: null });
 
     //Search Empfänger ID by Chat ID, momentan wird davon ausgegangen das die Empfänger ID mitgesendet wird
-    //Funktion die alle Empfäner IDs aus
+    //Funktion die alle Empfäner IDs ausgibt
     //receiverID = Permanent ID of other User
     console.log(
       "Das istdie Wahrheut darüber ob der Chat Partner Online ist" +
-        isOnline(message.receiverId)
+      isOnline(message.receiverId)
     );
     if (isOnline(message.receiverId)) {
       console.log("the current Chat partner ist online");
@@ -100,43 +100,70 @@ io.on("connection", function (socket) {
     } else {
       // Für Timo, In nicht zugestellte Nachrichten abspeichern.
       // await mongoDb.addMessage(message)
-      // answer(false);    
+      // answer(false);
+      try {
+        messageadded = await mongodb.addMessage(message);
+        if (messageadded = True) {
+          console.log("User offline and message added to DB")
+        }
+      } catch (err) {
+        console.log(err)
+        console.log("message could not be added to DB")
+      }
     }
   });
 
-//1. Nachrichten abspeichern die nicht zugestellt werden könnnen.
-//2. Nachrichten abrufen können, wennn man dann weider online geht.
-//   Dazum Muss die Funktion in Channel.JS geschrieben werden, FRAglich hierbei mit CHAT ID
-//   Müssen wir die Chats, also die Gruppen abspeichern?
+  //1. Nachrichten abspeichern die nicht zugestellt werden könnnen.
+  //2. Nachrichten abrufen können, wennn man dann wieder online geht.
+  //   Dazum Muss die Funktion in Channel.JS geschrieben werden, FRAglich hierbei mit CHAT ID
+  //   Müssen wir die Chats, also die Gruppen abspeichern?
 
 
 
-  socket.on("got-new-messages?", async function (data, answer)  {
+  socket.on("got-new-messages?", async function (data, answer) {
     try {
-      //Für Timo: Funktion die überprüft ob Nachrichten vorhanden sind für die permanent UserID
-      //Mit Welcher ID soll überprüft werden ob chats da sind
       var yourMessages = []
       yourMessages = await mongoDb.findMessagesForUser();
-
       if (yourMessages.length >= 0) {
         answer(msglist);
       } else {
         answer("No Messages For you, du hast keine Freunde");
       }
     } catch {
-      console.log(error);
+      console.log(err);
       answer(false);
     }
   });
 
 
-  socket.on("change-phonenumber", (object, answer) => {
-    //Für Timo: Datenbankanbindung
-  });
-  
-  socket.on("change-pseudonym", (object, answer) => {
-    //Für Timo: Datenbankanbindung
-  });
+
+
+socket.on("change-phonenumber", async function (userObject, newnumber, answer) {
+  //Für Timo: Datenbankanbindung
+  try {
+    numberchanged = await mongodb.changePhonenumber(userObject.userId, newnumber);
+    if (numberchanged = True) {
+      answer("Phonenumber of user" + userObject.userId + "has been changed to" + newnumber)
+    }
+  }
+  catch {
+    console.log(err)
+    answer(false)
+  }
+});
+
+socket.on("change-pseudonym", async function (userObject, newNickname, answer) {
+  //Für Timo: Datenbankanbindung
+  try {
+    nicknamechanged = await mongodb.changePseudonym(userObject.userId, newNickname);
+    if (nicknamechanged = True) {
+      answer("Phonenumber of user" + userObject.userId + "has been changed to" + newNickname)
+    }
+  }
+  catch {
+    console.log(err)
+    answer(false)
+  }
 
 });
 
