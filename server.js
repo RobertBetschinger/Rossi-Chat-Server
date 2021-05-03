@@ -128,15 +128,19 @@ io.on("connection", function (socket) {
       answer(false);
     }
   });
+
+
+  socket.on("change-phonenumber", (object, answer) => {
+    //Für Timo: Datenbankanbindung
+  });
+  
+  socket.on("change-pseudonym", (object, answer) => {
+    //Für Timo: Datenbankanbindung
+  });
+
 });
 
-socket.on("change-phonenumber", (object, answer) => {
-  //Für Timo: Datenbankanbindung
-});
 
-socket.on("change-pseudonym", (object, answer) => {
-  //Für Timo: Datenbankanbindung
-});
 
 //
 //Funktionen Die nicht im Socket.io event stattfinden
