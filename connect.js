@@ -65,7 +65,8 @@ function findUserByNumber(number) {
     if (err) return handleError(err);
     console.log(
       "Entry found: %s %s %s",
-      user.userId,
+      user.privateuserId,
+      user.foreignId,
       user.number,
       user.spitzname
     )
