@@ -41,7 +41,7 @@ io.on("connection", function (socket) {
   });
 
   //erstmaliges Einloggen
-  socket.on("request-registration", (object, answer) => {
+  socket.on("request-registration", async (object, answer) => {
     try {
       var privateid = ID();
       var forid = ID();
@@ -51,7 +51,7 @@ io.on("connection", function (socket) {
         number: object.phonenumber,
         // spitzname: "Beispielspitzname",
       };
-      var abspeichernStatus = mongodb.addNewUser(preUserObject);
+      var abspeichernStatus = await mongodb.addNewUser(preUserObject);
       console.log(abspeichernStatus);
       console.log("Ausgabe des Users");
       console.log(preUserObject);
@@ -63,8 +63,16 @@ io.on("connection", function (socket) {
     }
   });
 
+  socket.on("test",async function (object,answer){
+    currentForeignId = object.foreignId;
+    console.log("das ist die ReceiverID falls er Online ist" + currentForeignId)
+    var matchingPer = await mongodb.findUserPermanentId(someNumber)
+    var machtingPermanentId = await mongodb.findUserByNumber(someNumber)
+    var is = await mongodb.findMessagesForUser(skakas)
+   
+  })
+
   //Privatchat eröffnen
-  //Hier die Variablen noch verbessern
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
     currentPhoneNumber = object.phonenumber;
     console.log(
@@ -75,19 +83,12 @@ io.on("connection", function (socket) {
     answer(user.foreignId);
   });
 
-  socket.on("send-chat-message-privattt", async function (message, answer) {
-    var receiverPermanentId = await mongodb.findUserPermanentIdByForeignID(message.foreignId);
-
-
-  });
-
 
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
     console.log("das ist die ReceiverID" + message.foreignId);
     console.log("das sind alle User die online sind");
-    console.dir(usersCurrentlyOnline, { maxArrayLength: null });
     console.log(
       "Das ist die Wahrheit darüber ob der Chat Partner Online ist " +
         isOnline(message.foreignId)
@@ -108,8 +109,8 @@ io.on("connection", function (socket) {
         answer(false);
       }
     } else {
-      try  {
-        var receiverPermanentId = await mongodb.findUserPermanentIdByForeignID(
+      try {
+        var receiverPermanentId = await mongodb.findUserPermanentId(
           message.foreignId
         );
         const messageObject = {
@@ -202,8 +203,6 @@ io.on("connection", function (socket) {
 function lookUpChatPartners(chatId) {
   //Searches in ChatDatabase all Chat pArtners, returns array
 }
-
-
 
 function getSocketId(recevierId) {
   for (let i = 0; i < usersCurrentlyOnline.length; i++) {

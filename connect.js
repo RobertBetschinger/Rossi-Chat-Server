@@ -29,6 +29,7 @@ function connect() {
 //    mongoose.connection.close()
 //};
 
+//Nicht asynchron
 function addNewUser(userObject) {
   var user = new User(userObject);
   user.save((err, doc) => {
@@ -58,7 +59,6 @@ function findUserById(userId) {
 }
 
 function findUserByNumber(number) {
-  console.log("in connect js ist die nummber" + number);
   const response = User.findOne({ number: number }, function (err, user) {
     if (err) return handleError(err);
     console.log(
@@ -73,27 +73,32 @@ function findUserByNumber(number) {
   return response;
 }
 
-function findUserPermanentIdByForeignID(searchforeignId) {
-  try {
-    console.log(
-      "Das ist die Foreign ID mit der wir  suchen sollen" + searchforeignId
-    );
-    const response = User.findOne(
-      { foreignId: searchforeignId },
-      function (err, user) {
-        console.log(response.foreignId);
-        console.log("We did fint the corresponding User");
-        return response.foreignId;
-      }
-    );
-  } catch (error) {
-    console.log(error);
-    console.log("Could not find an matching user");
-    return false;
-  }
+function findMessagesForUser(receiverID) {
+  messages = User.find({ receiverId: receiverID }, function (err, message) {
+    if (err) return handleError(err);
+  });
+  return messages;
 }
 
-//Klappt
+function findUserPermanentId(searchforthatforeignId) {
+  console.log("Damit suchen wir" + searchforthatforeignId);
+  const response = User.findOne(
+    { foreignId: searchforthatforeignId },
+    function (err, user) {
+      if (err) return handleError(err);
+      console.log(
+        "Entry found: %s %s %s",
+        user.privateuserId,
+        user.foreignId,
+        user.number,
+        user.spitzname
+      );
+    }
+  );
+  return response.foreignId;
+}
+
+//Nicht asynchron
 function addMessage(messageobject) {
   try {
     console.log(messageobject);
@@ -112,26 +117,7 @@ function addMessage(messageobject) {
   }
 }
 
-//Methode um
-function findMessagesForUser(receiverID) {
-  try {
-    var messages = [];
-    messages = Message.find(
-      { receiverId: receiverID },
-      function (err, message) {
-        if (err) return handleError(err);
-        console.log(messages);
-        return messages;
-      }
-    );
-  } catch (error) {
-    console.log(error);
-    return false;
-  }
 
-  console.log(messages);
-  return messages;
-}
 
 //Brauchen wir anfangs nicht
 function deleteMessage(messageId) {
@@ -198,7 +184,7 @@ module.exports = {
   addMessage,
   findUserById,
   findUserByNumber,
-  findUserPermanentIdByForeignID,
+  findUserPermanentId,
   findMessagesForUser,
   deleteMessage,
   changePhonenumber,
