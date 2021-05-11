@@ -116,7 +116,7 @@ io.on("connection", function (socket) {
     //Als erstes überprüfen wir ob die ID berechtigt ist. erlaubt ist
     var matchingForeignId
     try {
-      matchingForeignId = await findUserPermanentForeignId(data.myprivateId)
+      matchingForeignId = await mongodb.findUserPermanentForeignId(data.myprivateId)
       console.log("Das ist die zugehörige ForeignID" + matchingForeignId)
     } catch (error) {
       console.log(error)
