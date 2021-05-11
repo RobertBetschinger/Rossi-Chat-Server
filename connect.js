@@ -95,6 +95,7 @@ function findUserPermanentId(searchforthatforeignId) {
       );
     }
   );
+  console.log("das haben wir gefunden" + response.foreignId)
   return response.foreignId;
 }
 
