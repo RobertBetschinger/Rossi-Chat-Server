@@ -139,7 +139,39 @@ io.on("connection", function (socket) {
   });
 
 
-  
+  //Key Exchange Funktionen:
+  socket.on("initiate-key-exchange", async function (data, answer) {
+    console.log("Server.Js initiate-key-exchange")
+    console.log(data.requesterPublicKey)
+    try {
+      var senderCorrespondingForeignId= await mongodb.findUserPermanentForeignId(data.senderPrivateId)
+      console.log("Found that corresponding ForeignId" + senderCorrespondingForeignId)
+    } catch (error) {
+      console.log(error)
+      answer(false)
+    }
+    if(senderCorrespondingForeignId == data.senderForeignId){
+      try {
+        console.log("User ist berechtigt einen KeyExchange zu starten.")
+        const keyExchangeObject = {
+          senderPrivateId: data.senderPrivateId,
+          senderForeignId: data.senderForeignId,
+          receiverForeignId: data.receiverForeignId,
+          senderPublicKey: data.senderPublicKey,
+          timestamp: data.timestamp,
+        };
+        await mongodb.addMessage(messageObject);
+          console.log("Key ExchangeObject Added to DB")
+          answer(true)
+      } catch (error) {
+        console.log(error)
+        answer(false)
+      }
+    }else{
+      console.log("User ist nicht berechtigt einen KeyExchange zu starten.")
+      answer(false)
+    }
+  });
 //Schnittstellen:
 
 socket.on("test", async function (object, answer) {

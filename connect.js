@@ -5,8 +5,10 @@ const mongoose = require("mongoose");
 const { options } = require("./router.js");
 require("./models/user.model.js");
 require("./models/message.model.js");
+require("./models/keyexchange.model.js")
 const User = mongoose.model("User");
 const Message = mongoose.model("Message");
+const KeyExchange = mongoose.model("KeyExchange")
 
 function connect() {
   mongoose.connect(
@@ -31,6 +33,9 @@ function connect() {
 //Intern Docs
 //TODO:
 //Alles auf Try Catch umschreiben, damit der Server nicht abschmieren kann.
+//Nachsehen ob man Dokumente automatisch löschen kann anhand von Timestamp /Lifetime
+
+
 //Alle Funktionen die zum User Gehören. AddNewUser, FindUserByNumber, FindUserPermanentID
 
 async function addNewUser(userObject) {
@@ -110,6 +115,27 @@ async function findMessagesForUser(recieverForeignID) {
 }
 
 
+//Abteil Key Exchange: saveKeyExchangeObject
+
+async function saveInitiateKeyExchange(exchangeObject){
+  console.log("Connect.js saveInitiateKeyExchange")
+  
+  try {
+    console.log(exchangeObject)
+    var exchangeObject = new KeyExchange(exchangeObject);
+    exchangeObject.save((err, doc) => {
+      if (!err) {
+        console.log("exchangeObject added to db");
+        return true;
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    console.log("Coudnt add the keyExchangeObject to db");
+    return false;
+  }
+
+}
 
 
 //Brauchen wir anfangs nicht
