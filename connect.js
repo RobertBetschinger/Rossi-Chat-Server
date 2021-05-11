@@ -74,9 +74,11 @@ function findUserByNumber(number) {
 }
 
 function findMessagesForUser(receiverID) {
+  console.log("das ist die id anhand der wir suchen" + receiverID)
   messages = User.find({ receiverId: receiverID }, function (err, message) {
     if (err) return handleError(err);
   });
+  console.log(messages)
   return messages;
 }
 
@@ -101,7 +103,7 @@ async function findUserPermanentId(searchforthatforeignId) {
 }
 
 //Nicht asynchron
-function addMessage(messageobject) {
+async function addMessage(messageobject) {
   try {
     console.log(messageobject);
     var message = new Message(messageobject);

@@ -1,5 +1,5 @@
 var app = require("express")();
-var server = require("http").createServer(app);
+var server = require("https").createServer(app);
 var io = require("socket.io")(server);
 const cors = require("cors");
 const router = require("./router");
@@ -117,7 +117,7 @@ io.on("connection", function (socket) {
           Message: message.messageContent,
           receiverId: response.privateuserId,
         };
-        mongodb.addMessage(messageObject);
+        await mongodb.addMessage(messageObject);
       } catch (err) {
         console.log(err);
         console.log("message could not be added to DB");
@@ -129,7 +129,7 @@ io.on("connection", function (socket) {
     try {
       var yourMessages = [];
       yourMessages = await mongodb.findMessagesForUser(data.myprivateId);
-      if (yourMessages.length >= 0) {
+      if (yourMessages.length >= 1) {
         console.log(yourMessages);
         answer(yourMessages);
       } else {
