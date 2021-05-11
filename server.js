@@ -42,6 +42,8 @@ io.on("connection", function (socket) {
     answer(true);
   });
 
+
+
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
     console.log("Server.Js request-registration")

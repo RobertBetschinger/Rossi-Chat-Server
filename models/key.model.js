@@ -11,6 +11,6 @@ const keyExchangeSchema = new mongoose.Schema(
   { versionKey: false }
 );
 
-const KeyExchange = mongoose.model("keyExchange", keyExchangeSchema);
+const KeyExchange = mongoose.model("KeyExchange", keyExchangeSchema);
 
 module.exports = KeyExchange;

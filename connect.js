@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const { options } = require("./router.js");
 require("./models/user.model.js");
 require("./models/message.model.js");
-require("./models/keyexchange.model.js")
+require("./models/key.model.js")
 const User = mongoose.model("User");
 const Message = mongoose.model("Message");
 const KeyExchange = mongoose.model("KeyExchange")
