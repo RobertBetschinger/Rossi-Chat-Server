@@ -80,9 +80,9 @@ function findMessagesForUser(receiverID) {
   return messages;
 }
 
- function findUserPermanentId(searchforthatforeignId) {
+async function findUserPermanentId(searchforthatforeignId) {
   console.log("Damit suchen wir" + searchforthatforeignId);
-  const response =  User.findOne(
+  const response = await User.findOne(
     { foreignId: searchforthatforeignId },
     function (err, user) {
       if (err) return handleError(err);
