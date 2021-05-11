@@ -1,5 +1,5 @@
 var app = require("express")();
-var server = require("https").createServer(app);
+var server = require("http").createServer(app);
 var io = require("socket.io")(server);
 const cors = require("cors");
 const router = require("./router");
