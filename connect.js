@@ -73,12 +73,12 @@ function findUserByNumber(number) {
   return response;
 }
 
-function findMessagesForUser(receiverID) {
+async function findMessagesForUser(receiverID) {
   console.log("das ist die id anhand der wir suchen" + receiverID)
-  messages = User.find({ receiverId: receiverID }, function (err, message) {
+  messages = await User.find({ receiverId: receiverID }, function (err, message) {
     if (err) return handleError(err);
   });
-  console.log(messages)
+  console.log(typeof(messages))
   return messages;
 }
 
