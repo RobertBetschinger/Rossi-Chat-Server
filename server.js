@@ -29,27 +29,27 @@ io.on("connection", function (socket) {
   });
 
   //Re-Einloggen in das Netzwerk, trägt User in Currently Online DB ein
-  socket.on("send-user-id", (arg1,arg2, answer) => {
+  socket.on("send-user-id", (arg1, arg2, answer) => {
     console.log(arg1);
     usersCurrentlyOnline.push({
       id: socket.id,
       PermanentUserID: arg1,
-      ForeignPermanentID:arg2,
+      ForeignPermanentID: arg2,
     });
 
-    answer(true)
+    answer(true);
   });
 
   //erstmaliges Einloggen
   socket.on("request-registration", (object, answer) => {
     try {
       var privateid = ID();
-      var forid = ID()
+      var forid = ID();
       const preUserObject = {
         privateuserId: privateid,
-        foreignId:forid,
+        foreignId: forid,
         number: object.phonenumber,
-        spitzname: "Beispielspitzname",
+        // spitzname: "Beispielspitzname",
       };
       var abspeichernStatus = mongodb.addNewUser(preUserObject);
       console.log(abspeichernStatus);
@@ -63,7 +63,6 @@ io.on("connection", function (socket) {
     }
   });
 
-  
   //Privatchat eröffnen
   //Hier die Variablen noch verbessern
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
@@ -78,14 +77,9 @@ io.on("connection", function (socket) {
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
-    //ReceiverID=foreign Key
     console.log("das ist die ReceiverID" + message.foreignId);
     console.log("das sind alle User die online sind");
     console.dir(usersCurrentlyOnline, { maxArrayLength: null });
-
-    //Search Empfänger ID by Chat ID, momentan wird davon ausgegangen das die Empfänger ID mitgesendet wird
-    //Funktion die alle Empfäner IDs ausgibt
-    //receiverID = Permanent ID of other User
     console.log(
       "Das ist die Wahrheit darüber ob der Chat Partner Online ist " +
         isOnline(message.foreignId)
@@ -106,8 +100,10 @@ io.on("connection", function (socket) {
         answer(false);
       }
     } else {
-      try {
-        var receiverPermanentId = getPermanentId(message.foreignId)
+      try  {
+        var receiverPermanentId = await mongodb.findUserPermanentIdByForeignID(
+          message.foreignId
+        );
         const messageObject = {
           messageId: message.messageId,
           creatorId: message.senderId,
@@ -125,7 +121,6 @@ io.on("connection", function (socket) {
       }
     }
   });
-
 
   socket.on("got-new-messages?", async function (data, answer) {
     try {
@@ -198,17 +193,6 @@ io.on("connection", function (socket) {
 
 function lookUpChatPartners(chatId) {
   //Searches in ChatDatabase all Chat pArtners, returns array
-}
-
-function getPermanentId(foreignId){
-  for (let i = 0; i < usersCurrentlyOnline.length; i++) {
-    if (usersCurrentlyOnline[i].ForeignPermanentID === foreignId) {
-      //Return Socket ID
-      console.log(usersCurrentlyOnline[i].PermanentUserID);
-      return usersCurrentlyOnline[i].PermanentUserID;
-    }
-  }
-  return null;
 }
 
 

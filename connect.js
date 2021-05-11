@@ -11,8 +11,8 @@ const Message = mongoose.model("Message");
 function connect() {
   mongoose.connect(
     "mongodb+srv://rossi-chat-server:" +
-    process.env.MONGO_ATLAS_CREDS +
-    "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
+      process.env.MONGO_ATLAS_CREDS +
+      "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
     { useNewUrlParser: true, useUnifiedTopology: true },
     (err) => {
       if (!err) {
@@ -41,26 +41,24 @@ function addNewUser(userObject) {
 
 function findUserById(userId) {
   const responseobject = User.findOne({ userId: userId }, function (err, user) {
-    response = false
+    response = false;
     if (err) {
-      return handleError(err)};
+      return handleError(err);
+    }
     console.log(
       "Entry found: %s %s %s",
       user.userId,
       user.number,
       user.pseudonym
-    )
-    response = true
-  })
-  console.log(typeof (responseobject))
-  return response
+    );
+    response = true;
+  });
+  console.log(typeof responseobject);
+  return response;
 }
 
-
-
-
 function findUserByNumber(number) {
-  console.log("in connect js ist die nummber" + number)
+  console.log("in connect js ist die nummber" + number);
   const response = User.findOne({ number: number }, function (err, user) {
     if (err) return handleError(err);
     console.log(
@@ -69,47 +67,70 @@ function findUserByNumber(number) {
       user.foreignId,
       user.number,
       user.spitzname
-    )
-})
-console.log(typeof(response))
-return response
-};
+    );
+  });
+  console.log(typeof response);
+  return response;
+}
 
-
-//Klappt
-function addMessage(messageobject){
+function findUserPermanentIdByForeignID(searchforeignId) {
   try {
-    console.log(messageobject)
-    var message = new Message(messageobject)
-    message.save((err, doc) => {
-      if (!err) {
-        console.log("Message added to db");
-        
-        return true;
-      }})
+    console.log(
+      "Das ist die Foreign ID mit der wir  suchen sollen" + foreignId
+    );
+    const response = User.findOne(
+      { foreignId: searchforeignId },
+      function (err, user) {
+        console.log(response.foreignId);
+        console.log("We did fint the corresponding User");
+        return response.foreignId;
+      }
+    );
   } catch (error) {
-    console.log(error)
-    console.log("coudnt add the message to db")
-    return false
+    console.log(error);
+    console.log("Could not find an matching user");
+    return false;
   }
 }
 
-//Methode um 
+//Klappt
+function addMessage(messageobject) {
+  try {
+    console.log(messageobject);
+    var message = new Message(messageobject);
+    message.save((err, doc) => {
+      if (!err) {
+        console.log("Message added to db");
+
+        return true;
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    console.log("coudnt add the message to db");
+    return false;
+  }
+}
+
+//Methode um
 function findMessagesForUser(receiverID) {
   try {
     var messages = [];
-    messages = Message.find({ receiverId: receiverID }, function (err, message) {
-      if (err) return handleError(err);
-      console.log(messages)
-      return messages
-    }); 
+    messages = Message.find(
+      { receiverId: receiverID },
+      function (err, message) {
+        if (err) return handleError(err);
+        console.log(messages);
+        return messages;
+      }
+    );
   } catch (error) {
-    console.log(error)
-    return false
+    console.log(error);
+    return false;
   }
 
-  console.log(messages)
-  return messages
+  console.log(messages);
+  return messages;
 }
 
 //Brauchen wir anfangs nicht
@@ -125,39 +146,50 @@ function deleteMessage(messageId) {
   });
 }
 
-
 function changePhonenumber(userId, newnumber) {
-  const responseobject = User.findOneAndUpdate({ userId: userId },{$set: {number: newnumber}},{new: true}, function (err, user) {
-    response = false
-    if (err) {
-      return handleError(err)};
-    console.log(
-      "Entry found: %s %s %s",
-      user.userId,
-      user.number,
-      user.pseudonym
-    )
-    response = true
-  })
-  console.log(typeof (responseobject))
-  return response
+  const responseobject = User.findOneAndUpdate(
+    { userId: userId },
+    { $set: { number: newnumber } },
+    { new: true },
+    function (err, user) {
+      response = false;
+      if (err) {
+        return handleError(err);
+      }
+      console.log(
+        "Entry found: %s %s %s",
+        user.userId,
+        user.number,
+        user.pseudonym
+      );
+      response = true;
+    }
+  );
+  console.log(typeof responseobject);
+  return response;
 }
 
 function changePseudonym(userId, newNickname) {
-  const responseobject = User.findOneAndUpdate({ userId: userId },{$set: {spitzname: newNickname}},{new: true}, function (err, user) {
-    response = false
-    if (err) {
-      return handleError(err)};
-    console.log(
-      "Entry found: %s %s %s",
-      user.userId,
-      user.number,
-      user.pseudonym
-    )
-    response = true
-  })
-  console.log(typeof (responseobject))
-  return response
+  const responseobject = User.findOneAndUpdate(
+    { userId: userId },
+    { $set: { spitzname: newNickname } },
+    { new: true },
+    function (err, user) {
+      response = false;
+      if (err) {
+        return handleError(err);
+      }
+      console.log(
+        "Entry found: %s %s %s",
+        user.userId,
+        user.number,
+        user.pseudonym
+      );
+      response = true;
+    }
+  );
+  console.log(typeof responseobject);
+  return response;
 }
 
 module.exports = {
@@ -166,8 +198,9 @@ module.exports = {
   addMessage,
   findUserById,
   findUserByNumber,
+  findUserPermanentIdByForeignID,
   findMessagesForUser,
   deleteMessage,
   changePhonenumber,
-  changePseudonym
+  changePseudonym,
 };
