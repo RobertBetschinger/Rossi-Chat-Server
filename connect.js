@@ -76,7 +76,7 @@ function findUserByNumber(number) {
 function findUserPermanentIdByForeignID(searchforeignId) {
   try {
     console.log(
-      "Das ist die Foreign ID mit der wir  suchen sollen" + foreignId
+      "Das ist die Foreign ID mit der wir  suchen sollen" + searchforeignId
     );
     const response = User.findOne(
       { foreignId: searchforeignId },

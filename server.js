@@ -75,6 +75,14 @@ io.on("connection", function (socket) {
     answer(user.foreignId);
   });
 
+  socket.on("send-chat-message-privattt", async function (message, answer) {
+    var receiverPermanentId = await mongodb.findUserPermanentIdByForeignID(message.foreignId);
+
+
+  });
+
+
+
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
     console.log("das ist die ReceiverID" + message.foreignId);
