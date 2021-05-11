@@ -63,14 +63,15 @@ io.on("connection", function (socket) {
     }
   });
 
-  socket.on("test",async function (object,answer){
+  socket.on("test", async function (object, answer) {
     currentForeignId = object.foreignId;
-    console.log("das ist die ReceiverID falls er Online ist" + currentForeignId)
-    var matchingPer = await mongodb.findUserPermanentId(someNumber)
-    var machtingPermanentId = await mongodb.findUserByNumber(someNumber)
-    var is = await mongodb.findMessagesForUser(skakas)
-   
-  })
+    console.log(
+      "das ist die ReceiverID falls er Online ist" + currentForeignId
+    );
+    var matchingPer = await mongodb.findUserPermanentId(someNumber);
+    var machtingPermanentId = await mongodb.findUserByNumber(someNumber);
+    var is = await mongodb.findMessagesForUser(skakas);
+  });
 
   //Privatchat eröffnen
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
@@ -82,8 +83,6 @@ io.on("connection", function (socket) {
     console.log(user.foreignId);
     answer(user.foreignId);
   });
-
-
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
@@ -110,20 +109,15 @@ io.on("connection", function (socket) {
       }
     } else {
       try {
-        var receiverPermanentId = await mongodb.findUserPermanentId(
-          message.foreignId
-        );
+        var response = await mongodb.findUserPermanentId(message.foreignId);
         const messageObject = {
           messageId: message.messageId,
           creatorId: message.senderId,
           timestamp: message.timestamp,
           Message: message.messageContent,
-          receiverId: receiverPermanentId,
+          receiverId: response.privateuserId,
         };
-        messageadded = await mongodb.addMessage(messageObject);
-        if (messageadded === true) {
-          console.log("User offline and message added to DB");
-        }
+        mongodb.addMessage(messageObject);
       } catch (err) {
         console.log(err);
         console.log("message could not be added to DB");
