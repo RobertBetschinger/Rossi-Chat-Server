@@ -75,7 +75,8 @@ function findUserByNumber(number) {
 
 async function findMessagesForUser(receiverID) {
   console.log("das ist die id anhand der wir suchen" + receiverID)
-  messages = await User.find({ receiverId: receiverID }, function (err, message) {
+  var messages = []
+  messages = await Message.find({ receiverId: receiverID }, function (err, message) {
     if (err) return handleError(err);
   });
   console.log(typeof(messages))
