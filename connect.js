@@ -28,9 +28,13 @@ function connect() {
 //function disconnect() {
 //    mongoose.connection.close()
 //};
+//Intern Docs
+//TODO:
+//Alles auf Try Catch umschreiben, damit der Server nicht abschmieren kann.
+//Alle Funktionen die zum User Gehören. AddNewUser, FindUserByNumber, FindUserPermanentID
 
-//Nicht asynchron
-function addNewUser(userObject) {
+async function addNewUser(userObject) {
+  console.log("Connect.js addNewUser")
   var user = new User(userObject);
   user.save((err, doc) => {
     if (!err) {
@@ -40,25 +44,9 @@ function addNewUser(userObject) {
   });
 }
 
-function findUserById(userId) {
-  const responseobject = User.findOne({ userId: userId }, function (err, user) {
-    response = false;
-    if (err) {
-      return handleError(err);
-    }
-    console.log(
-      "Entry found: %s %s %s",
-      user.userId,
-      user.number,
-      user.pseudonym
-    );
-    response = true;
-  });
-  console.log(typeof responseobject);
-  return response;
-}
-
 function findUserByNumber(number) {
+  console.log("Connect.js findUserByNumber")
+  console.log("Mit dieser Nummer suchen wir!" + number)
   const response = User.findOne({ number: number }, function (err, user) {
     if (err) return handleError(err);
     console.log(
@@ -69,25 +57,12 @@ function findUserByNumber(number) {
       user.spitzname
     );
   });
-  console.log(typeof response);
   return response;
 }
-
-async function findMessagesForUser(receiverID) {
-  console.log("das ist die id anhand der wir suchen" + receiverID)
-  var messages = []
-  messages = await Message.find({ receiverId: receiverID }, function (err, message) {
-    if (err) return handleError(err);
-  });
-  console.log(typeof(messages))
-  return messages;
-}
-
-async function findUserPermanentId(searchforthatforeignId) {
-  console.log("Damit suchen wir" + searchforthatforeignId);
-  const response = await User.findOne(
-    { foreignId: searchforthatforeignId },
-    function (err, user) {
+async function findUserPermanentForeignId(seachForThatPermanentID) {
+  console.log("Connect.js findUserPermanentForeignId")
+  console.log("Mit dieser PermanentId suchen wir" + seachForThatPermanentID);
+  const response = await User.findOne( {privateuserId: seachForThatPermanentID },function (err, user) {
       if (err) return handleError(err);
       console.log(
         "Entry found: %s %s %s",
@@ -99,28 +74,41 @@ async function findUserPermanentId(searchforthatforeignId) {
     }
   );
   console.log(response)
-  console.log("das haben wir gefunden" + response.privateuserId)
-  return response;
+  console.log("Diese zugehörige foreignID haben wir gefunden" + response.foreignId)
+  return response.foreignId;
 }
 
-//Nicht asynchron
+
+//MessagesAbteil Funktionen:AddMessage,findMessagesForUser
+
 async function addMessage(messageobject) {
+  console.log("Connect.js addMessage")
   try {
     console.log(messageobject);
     var message = new Message(messageobject);
     message.save((err, doc) => {
       if (!err) {
         console.log("Message added to db");
-
         return true;
       }
     });
   } catch (error) {
     console.log(error);
-    console.log("coudnt add the message to db");
+    console.log("Coudnt add the message to db");
     return false;
   }
 }
+
+async function findMessagesForUser(recieverForeignID) {
+  console.log("Connect.js findMessagesForUser")
+  console.log("Das ist die ForeignId anhand der wir suchen" + recieverForeignID)
+  var messages = []
+  messages = await Message.find({ receiverId: recieverForeignID }, function (err, message) {
+    if (err) return handleError(err);
+  });
+  return messages;
+}
+
 
 
 
@@ -187,9 +175,8 @@ module.exports = {
   connect,
   addNewUser,
   addMessage,
-  findUserById,
   findUserByNumber,
-  findUserPermanentId,
+  findUserPermanentForeignId,
   findMessagesForUser,
   deleteMessage,
   changePhonenumber,

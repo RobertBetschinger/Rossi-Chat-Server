@@ -10,17 +10,19 @@ const User = require("./models/user.model");
 const { resolve } = require("path");
 const { rejects } = require("assert");
 
-//array with socketsId and the corresponding permanentID
+//Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
+
 
 io.on("connection", function (socket) {
   console.log("a user connected");
-  var connectionStatus = mongodb.connect();
-  console.log(connectionStatus);
+  //var connectionStatus = mongodb.connect();
+  //console.log(connectionStatus);
+  mongodb.connect()
 
   //Disconnect
   socket.on("disconnect", function () {
-    console.log("user disconnected");
+    console.log("a user disconnected");
     for (let i = 0; i < usersCurrentlyOnline.length; i++) {
       if (usersCurrentlyOnline[i].id === socket.id) {
         usersCurrentlyOnline.splice(i, 1);
@@ -30,18 +32,19 @@ io.on("connection", function (socket) {
 
   //Re-Einloggen in das Netzwerk, trägt User in Currently Online DB ein
   socket.on("send-user-id", (arg1, arg2, answer) => {
+    console.log("Server.Js send-user-id")
     console.log(arg1);
     usersCurrentlyOnline.push({
       id: socket.id,
-      PermanentUserID: arg1,
+      PermanentUserId:arg1,
       ForeignPermanentID: arg2,
     });
-
     answer(true);
   });
 
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
+    console.log("Server.Js request-registration")
     try {
       var privateid = ID();
       var forid = ID();
@@ -51,73 +54,56 @@ io.on("connection", function (socket) {
         number: object.phonenumber,
         // spitzname: "Beispielspitzname",
       };
-      var abspeichernStatus = await mongodb.addNewUser(preUserObject);
-      console.log(abspeichernStatus);
-      console.log("Ausgabe des Users");
-      console.log(preUserObject);
-      console.log("createdUser");
+      await mongodb.addNewUser(preUserObject);  
       answer(preUserObject);
     } catch (error) {
       console.error(error);
+      //Auf Client Seite abfangen
       answer(false);
     }
   });
 
-  socket.on("test", async function (object, answer) {
-    currentForeignId = object.foreignId;
-    console.log(
-      "das ist die ReceiverID falls er Online ist" + currentForeignId
-    );
-    var matchingPer = await mongodb.findUserPermanentId(someNumber);
-    var machtingPermanentId = await mongodb.findUserByNumber(someNumber);
-    var is = await mongodb.findMessagesForUser(skakas);
-  });
-
   //Privatchat eröffnen
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
-    currentPhoneNumber = object.phonenumber;
-    console.log(
-      "Das ist die Nummer anhand er suchen soll" + currentPhoneNumber
-    );
-    var user = await mongodb.findUserByNumber(currentPhoneNumber);
-    console.log(user.foreignId);
-    answer(user.foreignId);
+    console.log("Server.Js request-chatpartner-receiverId")
+    console.log("Das ist die Nummer anhand er suchen soll" + object.phonenumber);
+    try {
+      var user = await mongodb.findUserByNumber(currentPhoneNumber);
+      console.log(user.foreignId);
+      answer(user.foreignId);      
+    } catch (error) {
+      answer(false)
+    }
   });
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
+    console.log("Server.Js send-chat-message-privat")
     console.log("das ist die ReceiverID" + message.foreignId);
-    console.log("das sind alle User die online sind");
-    console.log(
-      "Das ist die Wahrheit darüber ob der Chat Partner Online ist " +
-        isOnline(message.foreignId)
-    );
+    console.log( "Das ist die Wahrheit darüber ob der Chat Partner Online ist " +isOnline(message.foreignId));
     if (isOnline(message.foreignId)) {
       console.log("the current Chat partner ist online");
       try {
         var receiverSocketId = getSocketId(message.foreignId);
-        console.log("Dort Senden wir hin:" + receiverSocketId);
-        socket.broadcast
-          .to(receiverSocketId)
-          .emit("recieve-chat-message-private", message);
+        socket.broadcast.to(receiverSocketId).emit("recieve-chat-message-private", message);
         console.log("Sended Message");
         answer(true);
       } catch (err) {
         console.log(err);
-        console.log("hat nicht geklappt");
         answer(false);
       }
     } else {
       try {
-        var response = await mongodb.findUserPermanentId(message.foreignId);
         const messageObject = {
           messageId: message.messageId,
-          creatorId: message.senderId,
+          senderId: message.senderId,
           timestamp: message.timestamp,
-          Message: message.messageContent,
-          receiverId: response.privateuserId,
+          messageContent: message.messageContent,
+          receiverId: message.foreignId,
         };
         await mongodb.addMessage(messageObject);
+        console.log("Message Added to DB")
+        answer(true)
       } catch (err) {
         console.log(err);
         console.log("message could not be added to DB");
@@ -126,20 +112,47 @@ io.on("connection", function (socket) {
   });
 
   socket.on("got-new-messages?", async function (data, answer) {
+    console.log("Server.Js got-new-messages?")
+    //Als erstes überprüfen wir ob die ID berechtigt ist. erlaubt ist
+    var matchingForeignId
+    try {
+      matchingForeignId = await findUserPermanentForeignId(data.myprivateId)
+      console.log("Das ist die zugehörige ForeignID" + matchingForeignId)
+    } catch (error) {
+      console.log(error)
+      answer(false)
+    }
     try {
       var yourMessages = [];
-      yourMessages = await mongodb.findMessagesForUser(data.myprivateId);
+      yourMessages = await mongodb.findMessagesForUser(matchingForeignId);
       if (yourMessages.length >= 1) {
         console.log(yourMessages);
         answer(yourMessages);
       } else {
-        answer("No Messages For you, du hast keine Freunde");
+        console.log("No Messages for him, er hat keine Freunde")
+        answer(false);
       }
     } catch (error) {
       console.log(error);
       answer(false);
     }
   });
+
+
+  
+//Schnittstellen:
+
+socket.on("test", async function (object, answer) {
+  currentForeignId = object.foreignId;
+  console.log(
+    "das ist die ReceiverID falls er Online ist" + currentForeignId
+  );
+  var matchingPer = await mongodb.findUserPermanentId(someNumber);
+  var machtingPermanentId = await mongodb.findUserByNumber(someNumber);
+  var is = await mongodb.findMessagesForUser(skakas);
+  var soaooas = await mongodb.addMessage(aksaskka)
+  var saksa = await mongodb.addNewUser(asa)
+});
 
   socket.on(
     "change-phonenumber",
