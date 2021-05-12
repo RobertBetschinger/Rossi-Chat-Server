@@ -74,7 +74,7 @@ io.on("connection", function (socket) {
       console.log(user.foreignId);
       answer(user.foreignId);      
     } catch (error) {
-      answer(false)
+      console.log(error)
     }
   });
 
