@@ -143,7 +143,7 @@ io.on("connection", function (socket) {
   socket.on("ack-test", async function (data,answer){
     //Answer with result and callback
     result = 1
-    answer(result, function(res){ console.log(res); })
+    answer(result)
   })
 
   //Instant einrichten
@@ -173,7 +173,8 @@ io.on("connection", function (socket) {
           console.log("the current Exchange Partner is online");
           var socketId = getSocketId(data.receiverForeignId)
           var responseVal
-          await socket.broadcast.to(socketId).emit("recieve-exchangeObject", sendthatExchangeObject, async function(error, response){
+          //Hier doppelt checken ob der Initjator noch online ist
+          await socket.broadcast.to(socketId).emit("live-exchangeObject", keyExchangeObject, async function(error, response){
             console.log("Bitte hier Testen ob ein Response zurückkommt" + response)
             responseVal =response
           })
