@@ -177,9 +177,10 @@ io.on("connection", function (socket) {
            socket.broadcast.to(socketId).emit("request-key-response", keyExchangeObject, async function(error, response){
             console.log("Bitte hier Testen ob ein Response zurückkommt" + response)
             responseVal =response
-            answer(responseVal)
+            
           })
-          
+          console.log("Ist schon was zurückggekommen " + responseVal)
+          answer(responseVal)
           //If Receiver IS online, then answer with true, which is interpreted as an 5 sec timer to ask again if
         } else{
            await mongodb.saveInitiateKeyExchange(keyExchangeObject);
