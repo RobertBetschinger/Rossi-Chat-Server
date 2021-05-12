@@ -1,5 +1,10 @@
+const fs = require("fs");
+const path = require("path");
 var app = require("express")();
-var server = require("http").createServer(app);
+var server = require("https").createServer({
+  key: process.env.SSL_PRIVATE_KEY,
+  cert:fs.readFileSync(path.join(__dirname,"ssl","cert.pem")),
+},app);
 var io = require("socket.io")(server);
 const cors = require("cors");
 const router = require("./router");
@@ -9,6 +14,7 @@ const mongodb = require("./connect");
 const User = require("./models/user.model");
 const { resolve } = require("path");
 const { rejects } = require("assert");
+
 
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
