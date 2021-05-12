@@ -9,6 +9,7 @@ const mongodb = require("./connect");
 const User = require("./models/user.model");
 const { resolve } = require("path");
 const { rejects } = require("assert");
+const { response } = require("express");
 
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
@@ -31,7 +32,7 @@ io.on("connection", function (socket) {
   });
 
   //Re-Einloggen in das Netzwerk, trägt User in Currently Online DB ein
-  socket.on("send-user-id", (arg1, arg2, answer) => {
+  socket.on("send-user-id", async (arg1, arg2, answer) => {
     console.log("Server.Js send-user-id")
     console.log(arg1);
     usersCurrentlyOnline.push({
@@ -39,9 +40,8 @@ io.on("connection", function (socket) {
       PermanentUserId:arg1,
       ForeignPermanentID: arg2,
     });
-    answer(true);
+    
   });
-
 
 
   //erstmaliges Einloggen
@@ -140,11 +140,18 @@ io.on("connection", function (socket) {
     }
   });
 
+  socket.on("ack-test", async function (data,answer){
+    //Answer with result and callback
+    result = 1
+    answer(result, function(res){ console.log(res); })
+  })
 
+  //Instant einrichten
   //Key Exchange Funktionen:
   socket.on("initiate-key-exchange", async function (data, answer) {
     console.log("Server.Js initiate-key-exchange")
     console.log(data.requesterPublicKey)
+    //Hier kann man alternativ auch in der Live Liste nachschauen. Was ist euch lieber
     try {
       var senderCorrespondingForeignId= await mongodb.findUserPermanentForeignId(data.senderPrivateId)
       console.log("Found that corresponding ForeignId" + senderCorrespondingForeignId)
@@ -162,9 +169,20 @@ io.on("connection", function (socket) {
           senderPublicKey: data.senderPublicKey,
           timestamp: data.timestamp,
         };
-        await mongodb.addMessage(messageObject);
+        if (isOnline(data.receiverForeignId)) {
+          console.log("the current Exchange Partner is online");
+          var socketId = getSocketId(data.receiverForeignId)
+          var responseVal
+          await socket.broadcast.to(socketId).emit("recieve-exchangeObject", sendthatExchangeObject, async function(error, response){
+            console.log("Bitte hier Testen ob ein Response zurückkommt" + response)
+            responseVal =response
+          })
+          answer(responseVal)
+        } else{
+           await mongodb.saveInitiateKeyExchange(keyExchangeObject);
           console.log("Key ExchangeObject Added to DB")
           answer(true)
+        }
       } catch (error) {
         console.log(error)
         answer(false)
@@ -174,6 +192,41 @@ io.on("connection", function (socket) {
       answer(false)
     }
   });
+
+  async function sendKeyExhange(){
+    //Look up if keyexchange startet for arg2
+    try {
+      var isThereAnExchange = await mongodb.searchForRequestedExchanges()
+      if(isThereAnExchange.length == 0){
+        console.log("Kein Key Exchange für den User angefragt.")
+      } elseif(isThereAnExchange.length >= 1)
+      {
+        console.log("Key Exchange Anfrage ist da Bruder.")
+        //Evtl. in Funktion auslagern
+        for(var i = 0;i<isThereAnExchange.length;i++){
+          sendthatExchangeObject = {
+            requesterForeignId:  isThereAnExchange[i].requesterForeignId,
+            requesterPublicKey: isThereAnExchange[i].requesterPublicKey
+          }
+          socket.broadcast.to(arg2).emit("request-key-response", sendthatExchangeObject, async function(error, response){
+            console.log("Bitte hier testen ob response zurückkommt" + response)
+            //Response ist Key von Client und musst den foreignKey noch untersützen
+            
+    
+          });
+        }
+         
+         
+        
+        
+    
+      }
+    } catch (error) {
+      console.log(error)
+      answer(false)
+    }
+      }
+
 //Schnittstellen:
 
 socket.on("test", async function (object, answer) {

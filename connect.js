@@ -119,7 +119,6 @@ async function findMessagesForUser(recieverForeignID) {
 
 async function saveInitiateKeyExchange(exchangeObject){
   console.log("Connect.js saveInitiateKeyExchange")
-  
   try {
     console.log(exchangeObject)
     var exchangeObject = new KeyExchange(exchangeObject);
@@ -134,7 +133,22 @@ async function saveInitiateKeyExchange(exchangeObject){
     console.log("Coudnt add the keyExchangeObject to db");
     return false;
   }
+}
 
+async function searchForRequestedExchanges(foreignId,privateId){
+  console.log("Connect.js searchForRequestedExchanges ")
+ 
+  //Evtl hier noch Überprüfung einbauen ob Permanent ID zur ForeignID passt
+  try {
+    console.log("Mit dieser Foreign id : " + foreignId + "und dieser privateId : " + privateId + "suchen wir.")
+    exchangeObject = await KeyExchange.find({ receiverForeignId:foreignId  }, function (err, message) {
+      if (err) return handleError(err);
+    });
+    return exchangeObject
+  } catch (error) {
+    console.log(error);
+    return false
+  }
 }
 
 
@@ -207,4 +221,6 @@ module.exports = {
   deleteMessage,
   changePhonenumber,
   changePseudonym,
+  saveInitiateKeyExchange,
+  searchForRequestedExchanges
 };
