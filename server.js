@@ -174,11 +174,13 @@ io.on("connection", function (socket) {
           var socketId = getSocketId(data.receiverForeignId)
           var responseVal
           //Hier doppelt checken ob der Initjator noch online ist
-          await socket.broadcast.to(socketId).emit("live-exchangeObject", keyExchangeObject, async function(error, response){
+          await socket.broadcast.to(socketId).emit("request-key-response", keyExchangeObject, async function(error, response){
             console.log("Bitte hier Testen ob ein Response zurückkommt" + response)
             responseVal =response
+            answer(responseVal)
           })
-          answer(responseVal)
+          
+          //If Receiver IS online, then answer with true, which is interpreted as an 5 sec timer to ask again if
         } else{
            await mongodb.saveInitiateKeyExchange(keyExchangeObject);
           console.log("Key ExchangeObject Added to DB")
