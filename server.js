@@ -70,7 +70,7 @@ io.on("connection", function (socket) {
     console.log("Server.Js request-chatpartner-receiverId")
     console.log("Das ist die Nummer anhand er suchen soll" + object.phonenumber);
     try {
-      var user = await mongodb.findUserByNumber(currentPhoneNumber);
+      var user = await mongodb.findUserByNumber(object.phonenumber);
       console.log(user.foreignId);
       answer(user.foreignId);      
     } catch (error) {
