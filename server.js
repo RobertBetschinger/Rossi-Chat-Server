@@ -174,7 +174,7 @@ io.on("connection", function (socket) {
           var socketId = getSocketId(data.receiverForeignId)
           var responseVal
           //Hier doppelt checken ob der Initjator noch online ist
-          await socket.broadcast.to(socketId).emit("request-key-response", keyExchangeObject, async function(error, response){
+           socket.broadcast.to(socketId).emit("request-key-response", keyExchangeObject, async function(error, response){
             console.log("Bitte hier Testen ob ein Response zurückkommt" + response)
             responseVal =response
             answer(responseVal)
