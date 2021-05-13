@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 var app = require("express")();
 var server = require("https").createServer({
-  key: fs.readFileSync(path.join(__dirname,"ssl","key.pem"),
+  key: fs.readFileSync(path.join(__dirname,"ssl","key.pem")),
   cert:fs.readFileSync(path.join(__dirname,"ssl","cert.pem")),
 },app);
 var io = require("socket.io")(server);
