@@ -11,6 +11,7 @@ const Message = mongoose.model("Message");
 const KeyExchange = mongoose.model("KeyExchange")
 
 function connect() {
+  console.log("attempting connection");
   mongoose.connect(
     "mongodb+srv://rossi-chat-server:" +
       process.env.MONGO_ATLAS_CREDS +
@@ -40,34 +41,46 @@ function connect() {
 
 async function addNewUser(userObject) {
   console.log("Connect.js addNewUser")
-  var user = new User(userObject);
-  user.save((err, doc) => {
+  try {
+    var user = new User(userObject);
+    user.save((err, doc) => {
     if (!err) {
       console.log("User added to db");
       return doc;
-    }
-  });
+      }
+    });
+  } catch (error) {
+    console.log(error);
+    console.log("addNewUser failed")
+  }
+  
 }
 
 function findUserByNumber(number) {
   console.log("Connect.js findUserByNumber")
-  console.log("Mit dieser Nummer suchen wir!" + number)
-  const response = User.findOne({ number: number }, function (err, user) {
-    if (err) return handleError(err);
+  try {
+    console.log("Mit dieser Nummer suchen wir!" + number)
+    const response = User.findOne({ number: number }, function (err, user) {
     console.log(
       "Entry found: %s %s %s",
       user.privateuserId,
       user.foreignId,
       user.number,
       user.spitzname
-    );
-  });
-  return response;
+      );
+    });
+    return response;
+  } catch (error) {
+    console.log(error);
+    console.log("findUserByNumber failed")
+  } 
 }
+
 async function findUserPermanentForeignId(seachForThatPermanentID) {
   console.log("Connect.js findUserPermanentForeignId")
-  console.log("Mit dieser PermanentId suchen wir" + seachForThatPermanentID);
-  const response = await User.findOne( {privateuserId: seachForThatPermanentID },function (err, user) {
+  try{
+    console.log("Mit dieser PermanentId suchen wir" + seachForThatPermanentID);
+    const response = await User.findOne( {privateuserId: seachForThatPermanentID },function (err, user) {
       if (err) return handleError(err);
       console.log(
         "Entry found: %s %s %s",
@@ -75,12 +88,16 @@ async function findUserPermanentForeignId(seachForThatPermanentID) {
         user.foreignId,
         user.number,
         user.spitzname
-      );
-    }
-  );
-  console.log(response)
-  console.log("Diese zugehörige foreignID haben wir gefunden" + response.foreignId)
-  return response.foreignId;
+        );
+      }
+    );
+    console.log(response)
+    console.log("Diese zugehörige foreignID haben wir gefunden" + response.foreignId)
+    return response.foreignId;
+  } catch (error) {
+    console.log(error);
+    console.log("findUserPermanentForeignId failed")
+  } 
 }
 
 
@@ -107,11 +124,16 @@ async function addMessage(messageobject) {
 async function findMessagesForUser(recieverForeignID) {
   console.log("Connect.js findMessagesForUser")
   console.log("Das ist die ForeignId anhand der wir suchen" + recieverForeignID)
-  var messages = []
-  messages = await Message.find({ receiverId: recieverForeignID }, function (err, message) {
+  try {
+    var messages = []
+    messages = await Message.find({ receiverId: recieverForeignID }, function (err, message) {
     if (err) return handleError(err);
+    return messages;
   });
-  return messages;
+  } catch (error) {
+    console.log(error);
+    console.log("findMessagesForUser failed")
+  }
 }
 
 
