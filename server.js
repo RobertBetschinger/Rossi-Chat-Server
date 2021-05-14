@@ -141,20 +141,16 @@ io.on("connection", function (socket) {
         answer(false);
       }
     } catch (error) {
+      console.log("No Messages for him, er hat keine Freunde");
       console.log(error);
       answer(false);
     }
   });
 
-  socket.on("ack-test", async function (data, answer) {
-    //Answer with result and callback
-    result = 1;
-    answer(result);
-  });
 
   //Instant einrichten
   //Key Exchange Funktionen:
-  socket.on("initiate-key-exchange", async function (data, answer) {
+  socket.on("initiate-key-exchange", async (data, answer) => {
     console.log("Server.Js initiate-key-exchange");
     console.log(data.requesterPublicKey);
     try {
@@ -184,7 +180,7 @@ io.on("connection", function (socket) {
               }
             );
           //If Receiver IS online, then answer with true, which is interpreted as an 5 sec timer to ask again if
-          answer(true);
+         
         } else {
           const keyExchangeObject = {
             senderPrivateId: data.senderPrivateId,
@@ -242,6 +238,8 @@ io.on("connection", function (socket) {
             //Bitte noch mitschicken
             status: "answered",
           };
+
+
           await mongodb.saveInitiateKeyExchange(keyExchangeObject);
           console.log("Key ExchangeObject Added to DB");
           answer(true);
