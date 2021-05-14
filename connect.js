@@ -181,10 +181,11 @@ async function searchForInitiatedExchanges(foreignId,privateId){
   console.log("Connect.js searchForRequestedExchanges ")
   try {
     console.log("Mit dieser Foreign id : " + foreignId)
-    exchangeObjects = await KeyExchange.find({ receiverForeignId:foreignId  }, function (err, message) {
+    exchangeObjects = await KeyExchange.find({ receiverForeignId:foreignId, status:"initiated"}, function (err, message) {
       if (err) return handleError(err);
     });
     return exchangeObjects
+    //das mit dem Löschen muss noch eingebaut werden.
   } catch (error) {
     console.log(error);
     return false
@@ -197,7 +198,9 @@ async function searchForAnsweredExchanges(privateId, foreignId){
     answeredExchangeObjects = await KeyExchange.find({senderPrivateId:privateId,senderForeignId:foreignId, status:"answered"}, function (err,message){
       if(err) return handleError(err);
     });
+    console.log(typeof(answeredExchangeObjects))
     return answeredExchangeObjects
+    //Das mit dem löschen muss noch eingebaut werden.
   } catch (error) {
     console.log(error);
     return false

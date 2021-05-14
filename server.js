@@ -179,12 +179,7 @@ io.on("connection", function (socket) {
             requesterPublicKey: data.senderPublicKey,
           };
           //Hier doppelt checken ob der Initjator noch online ist
-          socket.broadcast
-            .to(socketId)
-            .emit(
-              "request-key-response",
-              onlineKeyExchangeObject,
-              async function (error, response) {
+          socket.broadcast.to(socketId).emit("request-key-response", onlineKeyExchangeObject, async function (error, response) {
                 //Keine Antwort wird hier erwartet
               }
             );
@@ -231,12 +226,7 @@ io.on("connection", function (socket) {
             responderId: data.responderForeignId,
             keyResponse: data.responderPublicKey,
           };
-          socket.broadcast
-            .to(socketID)
-            .emit(
-              "send-key-response",
-              finalKeyObject,
-              async function (error, response) {}
+          socket.broadcast.to(socketID).emit( "send-key-response", finalKeyObject,async function (error, response) {}
             );
         } else {
           console.log("Nicht Online Muss abgespeichert werden");
@@ -276,10 +266,43 @@ io.on("connection", function (socket) {
       if (senderCorrespondingForeignId == data.foreignId) {
         console.log("User ist berechtigt eine KeyExchanges abzufragen.");
         //Einmal abfragen ob Answered Objects da sind.
-
+        console.log("Abfragen ob answered Objekte da sind.")
+        var responses = await mongdodb.searchForAnsweredExchanges(data.privateId,data.foreignId)
+        console.log(responses)
+        if(responses.length() == 0){
+          listOfResponses = []
+          for(var i =0; i<responses.length();i++){
+            listOfResponses.push({
+              responderId:responses[i].receiverForeignId,
+              keyResponse:resonses[i].senderPublicKey
+            });
+          }
+          socket.broadcast.to(socket.id).emit("send-key-response", listOfResponses,async function (error, response) {}
+            //Eig geht hier ja auch response???
+          );
+        }else{
+          console.log("No Answered Objects for HIM.")
+        }
         //Einmal abfragen ob Initiated Objects da sind.
-        
+        console.log("Abfragen ob Initiated Objekte da sind.")
+        var initiaedObjects = await mongodb.searchForInitiatedExchanges(data.foreignId)
+        console.log(initiaedObjects)
+        if(initiaedObjects.length() == 0){
+          listOfInitiatedObjects = []
+          for(var i =0; i<responses.length();i++){
+            listOfInitiatedObjects.push({       
+                requesterForeignId: responses[i].senderForeignId,
+                requesterPublicKey: responses[i].senderPublicKey,
+            });
+          }
+          socket.broadcast.to(socket.id).emit("request-key-response", listOfInitiatedObjects,async function (error, response) {}
+            //Eig geht hier ja auch response???
+          );
+        } else{
+          console.log("No Initiated Objects for HIM.")
+        }
       } else{
+        console.log("User ist nicht berechtigt eine KeyExchanges abzufragen.");
         answer(false)
       }
     } catch (error) {
@@ -288,8 +311,9 @@ io.on("connection", function (socket) {
     }
   });
 
-  //Schnittstellen:
 
+
+  //Schnittstellen:
   socket.on("test", async function (object, answer) {
     currentForeignId = object.foreignId;
     console.log(
