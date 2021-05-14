@@ -193,7 +193,7 @@ io.on("connection", function (socket) {
           };
           await mongodb.saveInitiateKeyExchange(keyExchangeObject);
           console.log("Key ExchangeObject Added to DB");
-          answer(true);
+          
         }
       } catch (error) {
         console.log(error);
