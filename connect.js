@@ -84,6 +84,26 @@ async function findUserPermanentForeignId(seachForThatPermanentID) {
 }
 
 
+async function findUserPermanentId(seachForThatForeignID) {
+  console.log("Connect.js findUserPermanentId")
+  console.log("Mit dieser ForeignId suchen wir" + seachForThatForeignID);
+  const response = await User.findOne( {foreignId: seachForThatForeignID },function (err, user) {
+      if (err) return handleError(err);
+      console.log(
+        "Entry found: %s %s %s",
+        user.privateuserId,
+        user.foreignId,
+        user.number,
+        user.spitzname
+      );
+    }
+  );
+  console.log(response)
+  console.log("Diese zugehörige privateId haben wir gefunden" + response.privateuserId)
+  return response.privateuserId;
+}
+
+
 //MessagesAbteil Funktionen:AddMessage,findMessagesForUser
 
 async function addMessage(messageobject) {
@@ -135,21 +155,33 @@ async function saveInitiateKeyExchange(exchangeObject){
   }
 }
 
-async function searchForRequestedExchanges(foreignId,privateId){
+async function searchForInitiatedExchanges(foreignId,privateId){
   console.log("Connect.js searchForRequestedExchanges ")
- 
-  //Evtl hier noch Überprüfung einbauen ob Permanent ID zur ForeignID passt
   try {
-    console.log("Mit dieser Foreign id : " + foreignId + "und dieser privateId : " + privateId + "suchen wir.")
-    exchangeObject = await KeyExchange.find({ receiverForeignId:foreignId  }, function (err, message) {
+    console.log("Mit dieser Foreign id : " + foreignId)
+    exchangeObjects = await KeyExchange.find({ receiverForeignId:foreignId  }, function (err, message) {
       if (err) return handleError(err);
     });
-    return exchangeObject
+    return exchangeObjects
   } catch (error) {
     console.log(error);
     return false
   }
 }
+
+async function searchForAnsweredExchanges(privateId, foreignId){
+  console.log("Connect.js seachForAnsweredExchanges ")
+  try {
+    answeredExchangeObjects = await KeyExchange.find({senderPrivateId:privateId,senderForeignId:foreignId, status:"answered"}, function (err,message){
+      if(err) return handleError(err);
+    });
+    return answeredExchangeObjects
+  } catch (error) {
+    console.log(error);
+    return false
+  }
+}
+
 
 
 //Brauchen wir anfangs nicht
@@ -217,10 +249,12 @@ module.exports = {
   addMessage,
   findUserByNumber,
   findUserPermanentForeignId,
+  findUserPermanentId,
   findMessagesForUser,
   deleteMessage,
   changePhonenumber,
   changePseudonym,
   saveInitiateKeyExchange,
-  searchForRequestedExchanges
+  searchForInitiatedExchanges,
+  searchForAnsweredExchanges
 };
