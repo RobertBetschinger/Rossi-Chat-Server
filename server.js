@@ -175,9 +175,9 @@ io.on("connection", function (socket) {
             requesterPublicKey: data.senderPublicKey,
           };
           //Hier doppelt checken ob der Initjator noch online ist
-          socket.broadcast.to(socketId).emit("request-key-response", onlineKeyExchangeObject, async function (error, response) {
+          socket.broadcast.to(socketId).emit("request-key-response", onlineKeyExchangeObject/*, async function (error, response) {
                 //Keine Antwort wird hier erwartet
-              }
+              }*/
             );
           //If Receiver IS online, then answer with true, which is interpreted as an 5 sec timer to ask again if
          
@@ -217,13 +217,12 @@ io.on("connection", function (socket) {
         console.log("User ist berechtigt eine KeyResponse zu senden.");
         if (isOnline(data.requesterForeignId)) {
           //Sende object zurück
-          var socketID = getSocketID(data.requesterForeignId);
+          var socketID = getSocketId(data.requesterForeignId);
           finalKeyObject = {
             responderId: data.responderForeignId,
             keyResponse: data.responderPublicKey,
           };
-          socket.broadcast.to(socketID).emit( "send-key-response", finalKeyObject,async function (error, response) {}
-            );
+          socket.broadcast.to(socketID).emit("send-key-response", finalKeyObject/*,async function (error, response) {}*/);
         } else {
           console.log("Nicht Online Muss abgespeichert werden");
           var permanentIdOfRequester = await mongodb.findUserPermanentId(
