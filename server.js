@@ -161,7 +161,7 @@ io.on("connection", function (socket) {
       );
     } catch (error) {
       console.log(error);
-      answer(false);
+     // answer(false);
     }
     if (senderCorrespondingForeignId == data.senderForeignId) {
       try {
@@ -197,11 +197,11 @@ io.on("connection", function (socket) {
         }
       } catch (error) {
         console.log(error);
-        answer(false);
+        
       }
     } else {
       console.log("User ist nicht berechtigt einen KeyExchange zu starten.");
-      answer(false);
+     // answer(false);
     }
   });
 
@@ -242,15 +242,15 @@ io.on("connection", function (socket) {
 
           await mongodb.saveInitiateKeyExchange(keyExchangeObject);
           console.log("Key ExchangeObject Added to DB");
-          answer(true);
+         // answer(true);
         }
       } else {
         console.log("User ist nicht berechtigt eine KeyResponse zu senden!");
-        answer(false);
+       // answer(false);
       }
     } catch (error) {
       console.log(error);
-      answer(false);
+     // answer(false);
     }
   });
 
@@ -301,11 +301,11 @@ io.on("connection", function (socket) {
         }
       } else{
         console.log("User ist nicht berechtigt eine KeyExchanges abzufragen.");
-        answer(false)
+        //answer(false)
       }
     } catch (error) {
       console.log(error)
-      answer(false)
+     // answer(false)
     }
   });
 
