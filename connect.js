@@ -10,9 +10,9 @@ const User = mongoose.model("User");
 const Message = mongoose.model("Message");
 const KeyExchange = mongoose.model("KeyExchange")
 
-async function connect() {
+ function connect() {
   console.log("attempting connection");
- await mongoose.connect(
+  mongoose.createConnection(
     "mongodb+srv://rossi-chat-server:" +
       process.env.MONGO_ATLAS_CREDS +
       "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
@@ -25,7 +25,7 @@ async function connect() {
       }
     }
   );
-}
+} 
 
 // Disconnect der DB optional
 //function disconnect() {
