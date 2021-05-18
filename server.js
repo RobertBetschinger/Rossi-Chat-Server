@@ -14,11 +14,16 @@ const { response } = require("express");
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
 
+
+mongodb.connect();
+
+
+
 io.on("connection", function (socket) {
   console.log("a user connected");
   //var connectionStatus = mongodb.connect();
   //console.log(connectionStatus);
-  mongodb.connect();
+  
 
   //Disconnect
   socket.on("disconnect", function () {
