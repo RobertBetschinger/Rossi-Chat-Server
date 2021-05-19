@@ -13,15 +13,18 @@ const { response } = require("express");
 
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
-
 const mongoose = require("mongoose");
 
 
+mongodb.connect().then(() => {
+   console.log("Connection zu MongoDB ist aufgebaut") 
+createServer()},
+err => { console.log("Keine Connection Zu Mongo Möglich. Server wird nicht gestartet")})
+//console.log(zahl)
 
 
+console.log("Wie funktionirt die Reihenfolge?")
 
-
-console.log("Wie funktionirt die Reihenfolg")
 io.on("connection", function (socket) {
   console.log("a user connected");
   //var connectionStatus = mongodb.connect();
@@ -420,23 +423,12 @@ var ID = function () {
 
 
 
-/* db.once('open',()=>{
-  app.use(router);
-  app.use(cors());
-  server.listen(PORT, () => console.log("Server has started on Port: " + PORT));
-}) */
+
+function createServer(){
+
 
 app.use(router);
 app.use(cors());
+server.listen(PORT, () => {console.log('Express server listening on port ' + PORT) })
 
-server.listen(PORT, () => {
-  console.log('MongoDB URL in use: ' + process.env.MONGO_URL)
-  mongodb.connect()
- // mongoose.connect(process.env.MONGO_URL)
- // mongoose.connection
-  // .once('open', () => console.log('connected to MongoDB!'))
-  // .on('error', err => console.error('connecting to MongoDB ' + err))
- 
-  console.log('Express server listening on port ' + PORT) 
- 
- })
+}
