@@ -233,17 +233,15 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
   }
 }
 
-//Brauchen wir anfangs nicht
-function deleteMessage(messageId) {
-  Message.findOneAndDelete({ messageId: messageId }, function (err, message) {
-    if (err) return handleError(err);
-    console.log(
-      "Entry deleted: %s %s %s",
-      message.messageId,
-      message.creatorId,
-      message.Message
-    );
-  });
+async function deleteKeyExchange(deleteThisKey){
+  console.log("Connect.js findMessagesForUser");
+  try {
+    KeyExchange.deleteOne({_id:deleteThisKey}),function (err, message) {
+      if (err) return handleError(err);}
+  } catch (error) {
+    console.log(error);
+    console.log("deleteThisKey failed");
+  }
 }
 
 function changePhonenumber(userId, newnumber) {
@@ -306,4 +304,5 @@ module.exports = {
   saveInitiateKeyExchange,
   searchForInitiatedExchanges,
   searchForAnsweredExchanges,
+  deleteKeyExchange,
 };

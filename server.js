@@ -168,7 +168,7 @@ io.on("connection", function (socket) {
       answer(true)
     } catch (error) {
       console.log(error)
-      console.log("Nachrichten konnten nicht gelöscht werden.")
+      console.log("Nachrichte konnten nicht gelöscht werden.")
       answer(false)
     }
 
@@ -315,8 +315,9 @@ io.on("connection", function (socket) {
           listOfInitiatedObjects = []
           for(var i =0; i<responses.length();i++){
             listOfInitiatedObjects.push({       
-                requesterForeignId: responses[i].senderForeignId,
-                requesterPublicKey: responses[i].senderPublicKey,
+                mongodDbObjectId: initiaedObjects[i]._id,
+                requesterForeignId: initiaedObjects[i].senderForeignId,
+                requesterPublicKey: initiaedObjects[i].senderPublicKey,
             });
           }
           socket.broadcast.to(socket.id).emit("request-key-response", listOfInitiatedObjects,async function (error, response) {}
@@ -334,6 +335,23 @@ io.on("connection", function (socket) {
      // answer(false)
     }
   });
+
+
+  socket.on("initiated-key-received", async(data,answer)=>{
+    //Auth muss noch  eingebaut werden.
+    console.log("Server.js initiated-key-received")
+    console.log(data)
+    console.log(data.keyID)
+    try {
+      await mongodb.deleteKeyExchange(data.keyId)
+      answer(true)
+    } catch (error) {
+      console.log(error)
+      console.log("KeyExchange konnte nicht gelöscht werden.")
+      answer(false)
+    }
+
+  })
 
 
 
