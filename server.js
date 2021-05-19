@@ -13,17 +13,16 @@ const { response } = require("express");
 
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
-const mongoose = require("mongoose");
+
 
 
 mongodb.connect().then(() => {
-   console.log("Connection zu MongoDB ist aufgebaut") 
+console.log("Connection zu MongoDB ist aufgebaut") 
 createServer()},
-err => { console.log("Keine Connection Zu Mongo Möglich. Server wird nicht gestartet")})
-//console.log(zahl)
+err => { 
+console.log("Keine Connection Zu MongoDB Möglich. Server wird nicht gestartet")
+console.log(err)})
 
-
-console.log("Wie funktionirt die Reihenfolge?")
 
 io.on("connection", function (socket) {
   console.log("a user connected");
@@ -122,6 +121,7 @@ io.on("connection", function (socket) {
         console.log("Message Added to DB");
         answer(true);
       } catch (err) {
+        answer(false)
         console.log(err);
         console.log("message could not be added to DB");
       }
@@ -157,6 +157,22 @@ io.on("connection", function (socket) {
       answer(false);
     }
   });
+
+  socket.on("message-received", async(data,answer)=>{
+    //Auth muss noch  eingebaut werden.
+    console.log("Server.js messsage-received")
+    console.log(data)
+    console.log(data.messageId)
+    try {
+      await mongodb.deleteMessage(data.messageId)
+      answer(true)
+    } catch (error) {
+      console.log(error)
+      console.log("Nachrichten konnten nicht gelöscht werden.")
+      answer(false)
+    }
+
+  })
 
 
   //Instant einrichten
@@ -321,19 +337,6 @@ io.on("connection", function (socket) {
 
 
 
-  //Schnittstellen:
-  socket.on("test", async function (object, answer) {
-    currentForeignId = object.foreignId;
-    console.log(
-      "das ist die ReceiverID falls er Online ist" + currentForeignId
-    );
-    var matchingPer = await mongodb.findUserPermanentId(someNumber);
-    var machtingPermanentId = await mongodb.findUserByNumber(someNumber);
-    var is = await mongodb.findMessagesForUser(skakas);
-    var soaooas = await mongodb.addMessage(aksaskka);
-    var saksa = await mongodb.addNewUser(asa);
-  });
-
   socket.on(
     "change-phonenumber",
     async function (userObject, newnumber, answer) {
@@ -421,14 +424,8 @@ var ID = function () {
 
 //This Part has to be at the bottom of the Code
 
-
-
-
 function createServer(){
-
-
 app.use(router);
 app.use(cors());
 server.listen(PORT, () => {console.log('Express server listening on port ' + PORT) })
-
 }

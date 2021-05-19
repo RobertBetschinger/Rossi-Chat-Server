@@ -162,6 +162,17 @@ async function findMessagesForUser(recieverForeignID) {
   }
 }
 
+async function deleteMessage(deleteThisMessage){
+  console.log("Connect.js findMessagesForUser");
+  try {
+    Message.deleteOne({messageId:deleteThisMessage}),function (err, message) {
+      if (err) return handleError(err);}
+  } catch (error) {
+    console.log(error);
+    console.log("deleteMessages failed");
+  }
+}
+
 //Abteil Key Exchange: saveKeyExchangeObject
 
 async function saveInitiateKeyExchange(exchangeObject) {
