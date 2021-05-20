@@ -15,7 +15,6 @@ const { response } = require("express");
 const usersCurrentlyOnline = [];
 
 
-
 mongodb.connect().then(() => {
 console.log("Connection zu MongoDB ist aufgebaut") 
 createServer()},
@@ -279,6 +278,7 @@ io.on("connection", function (socket) {
      // answer(false);
     }
   });
+  
 
   socket.on("check-for-key-requests", async function (data, answer) {
     console.log("server.js check-for-key-requests");
@@ -297,6 +297,7 @@ io.on("connection", function (socket) {
           listOfResponses = []
           for(var i =0; i<responses.length();i++){
             listOfResponses.push({
+              mongodDbObjectId: listOfResponses[i]._id,
               responderId:responses[i].receiverForeignId,
               keyResponse:resonses[i].senderPublicKey
             });
@@ -315,7 +316,7 @@ io.on("connection", function (socket) {
           listOfInitiatedObjects = []
           for(var i =0; i<responses.length();i++){
             listOfInitiatedObjects.push({       
-                mongodDbObjectId: initiaedObjects[i]._id,
+               
                 requesterForeignId: initiaedObjects[i].senderForeignId,
                 requesterPublicKey: initiaedObjects[i].senderPublicKey,
             });
