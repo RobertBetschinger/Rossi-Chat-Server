@@ -257,7 +257,7 @@ io.on("connection", function (socket) {
           const keyExchangeObject = {
             senderPrivateId: permanentIdOfRequester,
             senderForeignId: data.requesterForeignId,
-            receiverForeignId: data.receiverForeignId,
+            receiverForeignId: data.responderForeignId,
             senderPublicKey: data.responderPublicKey,
             //timestamp: data.timestamp,
             //Bitte noch mitschicken
@@ -291,20 +291,21 @@ io.on("connection", function (socket) {
         console.log("User ist berechtigt eine KeyExchanges abzufragen.");
         //Einmal abfragen ob Answered Objects da sind.
         console.log("Abfragen ob answered Objekte da sind.")
-        var responses = await mongdodb.searchForAnsweredExchanges(data.privateId,data.foreignId)
+        var responses = await mongodb.searchForAnsweredExchanges(data.privateId,data.foreignId)
         console.log(responses)
-        if(responses.length() == 0){
+        if(responses.length != 0){
           listOfResponses = []
-          for(var i =0; i<responses.length();i++){
+          for(var i =0; i<responses.length;i++){
             listOfResponses.push({
               mongodDbObjectId: listOfResponses[i]._id,
               responderId:responses[i].receiverForeignId,
-              keyResponse:resonses[i].senderPublicKey
+              keyResponse:responses[i].senderPublicKey
             });
           }
-          socket.broadcast.to(socket.id).emit("send-key-response", listOfResponses,async function (error, response) {}
+          var socketId = getSocketId(senderCorrespondingForeignId)
+          io.to(socketId).emit("send-key-response", listOfResponses /*,async function (error, response) {}
             //Eig geht hier ja auch response???
-          );
+          */);
         }else{
           console.log("No Answered Objects for HIM.")
         }
@@ -312,18 +313,19 @@ io.on("connection", function (socket) {
         console.log("Abfragen ob Initiated Objekte da sind.")
         var initiaedObjects = await mongodb.searchForInitiatedExchanges(data.foreignId)
         console.log(initiaedObjects)
-        if(initiaedObjects.length() == 0){
+        if(initiaedObjects.length != 0){
           listOfInitiatedObjects = []
-          for(var i =0; i<responses.length();i++){
+          for(var i =0; i<initiaedObjects.length;i++){
             listOfInitiatedObjects.push({       
                
                 requesterForeignId: initiaedObjects[i].senderForeignId,
                 requesterPublicKey: initiaedObjects[i].senderPublicKey,
             });
           }
-          socket.broadcast.to(socket.id).emit("request-key-response", listOfInitiatedObjects,async function (error, response) {}
+          var socketId = getSocketId(senderCorrespondingForeignId)
+          io.to(socketId).emit("request-key-response", listOfInitiatedObjects /*,async function (error, response) {}
             //Eig geht hier ja auch response???
-          );
+          */);
         } else{
           console.log("No Initiated Objects for HIM.")
         }
