@@ -11,6 +11,8 @@ const { resolve } = require("path");
 const { rejects } = require("assert");
 const { response } = require("express");
 
+const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
+
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
 

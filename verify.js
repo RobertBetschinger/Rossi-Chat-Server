@@ -27,9 +27,8 @@ async function waitForMessagebirdAnswer(nummer){
     console.log("Messagebird SMS sent and ID creation successful: " + result.id);
     return result.id
     };
+   
 
-var nummer = "+4917630143818";    
-//waitForMessagebirdAnswer(nummer);
 
 function verifyMessagebirdToken(id, token){
     try {
@@ -53,4 +52,3 @@ async function waitForTokenCheck(id, token){
     return result.status
     };
 
- //waitForTokenCheck(id, token)
