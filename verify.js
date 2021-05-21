@@ -1,57 +1,56 @@
-const messagebird = require("messagebird")("semJn0HtEPMEdUjXpHtC09eT6");
+const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 
-async function sendVerificationMessage(phonenumber) {
+
+function sendVerificationSMS(phonenumber){
     try {
         var params = {
             originator: "Rossi Chat",
             type: "sms",
             timeout: "100"
         }
-        const res = await messagebird.verify.create(phonenumber, params, function (err, response) {
+     return new Promise((resolve, reject)=>{
+        messagebird.verify.create(phonenumber, params, function (err, response) {
             if (err) {
-                return console.log(err);
+                reject(err)
             }
-            console.log(response);
-            console.log("Verification SMS sent to: " + phonenumber);
-            return response.id;
+            resolve(response);
         });
-        return res;
+      });
     } catch (error) {
         console.log(error);
         console.log("Verify object creation failed");
     }
 };
 
-async function verifyPhonenumber(id, token) {
-    try {
-        const response = await messagebird.verify.verify(id, token, function (err, response) {
-            if (err) {
-                return err;
-            }
-            return response;
-        })
-        } catch (error) {
-        console.log(error);
-    }
-};
+async function waitForMessagebirdAnswer(nummer){
+    var result  = await sendVerificationSMS(nummer)
+    console.log("Messagebird SMS sent and ID creation successful: " + result.id);
+    return result.id
+    };
 
-async function viewVerifyObject(id) {
+var nummer = "+4917630143818";    
+//waitForMessagebirdAnswer(nummer);
+
+function verifyMessagebirdToken(id, token){
     try {
-        const response = await messagebird.verify.read(id, function (err, response) {
+     return new Promise((resolve, reject)=>{
+        messagebird.verify.verify(id, token, function (err, response) {
             if (err) {
-                return err;
+                reject(err)
             }
-            return response
-        })
-        return response
+            resolve(response);
+        });
+      });
     } catch (error) {
-        console.log(error)
+        console.log(error);
+        console.log("Verify API token check failed");
     }
 };
 
-var nummer = "+4917630143818";
-console.log(sendVerificationMessage(nummer));
+async function waitForTokenCheck(id, token){
+    var result  = await verifyMessagebirdToken(id, token)
+    console.log("Token and id Ckeck: " + result.status);
+    return result.status
+    };
 
-
-
-
+ //waitForTokenCheck(id, token)
