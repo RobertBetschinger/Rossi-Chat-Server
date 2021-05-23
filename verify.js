@@ -1,26 +1,71 @@
-const messagebird = require("messagebird")("semJn0HtEPMEdUjXpHtC09eT6");
+const messagebird = require("messagebird")("ClY2MXXiTmw89CgfrvA8OCoW8");
 
-async function sendVerificationMessage(phonenumber) {
+ function sendVerificationMessage(phonenumber) {
+   
     try {
         var params = {
             originator: "Rossi Chat",
             type: "sms",
             timeout: "100"
         }
-        const res = await messagebird.verify.create(phonenumber, params, function (err, response) {
+        messagebird.verify.create(phonenumber, params, function (err, response) {
             if (err) {
                 return console.log(err);
             }
-            console.log(response);
-            console.log("Verification SMS sent to: " + phonenumber);
-            return response.id;
-        });
-        return res;
+            goOn(response);
+        })    
     } catch (error) {
         console.log(error);
         console.log("Verify object creation failed");
     }
 };
+    
+function goOn(response){
+console.log(response)
+}
+
+//sendVerificationMessage("+49016092606699")
+smsobject = {
+    id:""
+}
+function sendVerificationMessagePromise(phonenumber){
+    
+    try {
+        var params = {
+            originator: "Rossi Chat",
+            type: "sms",
+            timeout: "100"
+        }
+     return new Promise((resolve, reject)=>{
+        messagebird.verify.create(phonenumber, params, function (err, response) {
+            if (err) {
+                reject(err)
+            }
+            smsobject.id = response.id
+            resolve(response);
+        })    
+
+      })
+    } catch (error) {
+        console.log(error);
+        console.log("Verify object creation failed");
+    }
+}
+
+
+//test()
+async function test(){
+var result  = await sendVerificationMessagePromise("+49016092606699")
+console.log(result)
+}
+
+
+
+Promise.all([sendVerificationMessagePromise("+49016092606699")]).then(((values)=> console.log(values)))
+
+
+
+
 
 async function verifyPhonenumber(id, token) {
     try {
@@ -49,8 +94,6 @@ async function viewVerifyObject(id) {
     }
 };
 
-var nummer = "+4917630143818";
-console.log(sendVerificationMessage(nummer));
 
 
 
