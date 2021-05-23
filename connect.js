@@ -149,13 +149,16 @@ async function findMessagesForUser(recieverForeignID) {
   );
   try {
     var messages = [];
+    var messagesencoded = [];
     messages = await Message.find(
-      { receiverId: recieverForeignID },
-      function (err, message) {
-        if (err) return handleError(err);
-        return messages;
-      }
-    );
+      { receiverId: recieverForeignID }).lean();
+    messages.forEach(message => messagesencoded.push({
+      "messageId": message.messageId, 
+      "senderId": message.senderId, 
+      "foreignId": message.receiverId, 
+      "messageContent": message.messageContent, 
+      "timestamp": message.timestamp}))
+    return messagesencoded
   } catch (error) {
     console.log(error);
     console.log("findMessagesForUser failed");
