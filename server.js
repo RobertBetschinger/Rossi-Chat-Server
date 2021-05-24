@@ -11,6 +11,8 @@ const { resolve } = require("path");
 const { rejects } = require("assert");
 const { response } = require("express");
 
+const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
+
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
 
@@ -54,7 +56,7 @@ io.on("connection", function (socket) {
   socket.on("request-registration", async (object, answer) => {
     console.log("Server.Js request-registration");
     try {
-      var privateid = ID();
+      var privateid = PrivateID();
       var forid = ID();
       const preUserObject = {
         privateuserId: privateid,
@@ -127,6 +129,8 @@ io.on("connection", function (socket) {
     }
   });
 
+
+  ///Sicherheitslücke
   socket.on("got-new-messages?", async function (data, answer) {
     console.log("Server.Js got-new-messages?");
     //Als erstes überprüfen wir ob die ID berechtigt ist. erlaubt ist
@@ -157,17 +161,66 @@ io.on("connection", function (socket) {
     }
   });
 
-  socket.on("message-received", async(data,answer)=>{
+  socket.on("who-received-my-messages", async function (data, answer) {
+    console.log("Server.Js got-new-messages?");
+    //Als erstes überprüfen wir ob die ID berechtigt ist. erlaubt ist
+    var matchingForeignId;
+    try {
+      var senderCorrespondingForeignId =
+        await mongodb.findUserPermanentForeignId(data.responderPrivateId);
+      console.log(
+        "Found that corresponding ForeignId" + senderCorrespondingForeignId);
+      if (senderCorrespondingForeignId == data.responderForeignId) {
+        console.log("User ist berechtigt eine nachzusehen wo seine Nachrichten angekommen sind.");
+    }
+      var yourMessagesRead = [];
+      yourMessagesRead = await mongodb.findReceivedMessages(matchingForeignId);
+      if (yourMessagesRead.length >= 1) {
+        console.log(yourMessagesRead);
+        answer(yourMessagesRead);
+      } else {
+        console.log("No Messages for him, seine Nachrichten sind nicht angekommen. Internet Problems?");
+        answer(false);
+      }
+    } catch (error) {
+      console.log("No Messages for him, er hat keine Freunde");
+      console.log(error);
+      answer(false);
+    }
+  });
+
+
+
+  socket.on("message-received", async(messageId,answer)=>{
     //Auth muss noch  eingebaut werden.
     console.log("Server.js messsage-received")
-    console.log(data)
-    console.log(data.messageId)
+    //Nachricht abspeichern das sie gelesen wurde.
+    console.log(messageId)
     try {
-      await mongodb.deleteMessage(data.messageId)
-      answer(true)
+     var senderID = await mongodb.senderForeignIdWithMessageId(messageId);
+     // await mongodb.deleteMessage(messageId)
+      if (isOnline(senderID)) {
+        console.log("the Sender of the message is online"); 
+          var receiverSocketId = getSocketId(messageId);
+          socket.broadcast.to(receiverSocketId).emit("message-transmitted", messageId);
+          console.log("Sended Message Transmitted to Sender");
+      } else{
+        const messageObject = {
+          messageId: messageId,
+          senderId: senderId,
+          status:"ClientReceived"
+        };
+       var didItWork = await mongodb.replaceMessage(messageObject);
+       if(didItWork){
+        console.log("Message was overwritten.")
+        answer(true)
+       }else{ console.log("Message was not overwritten overwritten.")
+      answer(false)}
+       
+        }
     } catch (error) {
       console.log(error)
-      console.log("Nachrichte konnten nicht gelöscht werden.")
+      console.log("Nachrichten konnten nicht zugestellt oder überschrieben werden.")
       answer(false)
     }
 
@@ -437,6 +490,13 @@ function isOnline(onlinePermanentId) {
 }
 
 var ID = function () {
+  // Math.random should be unique because of its seeding algorithm.
+  // Convert it to base 36 (numbers + letters), and grab the first 9 characters
+  // after the decimal.
+  return Math.random().toString(36).substr(2, 9);
+};
+
+var PrivateID = function () {
   // Math.random should be unique because of its seeding algorithm.
   // Convert it to base 36 (numbers + letters), and grab the first 9 characters
   // after the decimal.

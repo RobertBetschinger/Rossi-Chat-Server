@@ -149,16 +149,67 @@ async function findMessagesForUser(recieverForeignID) {
   );
   try {
     var messages = [];
+    var messagesencoded = [];
     messages = await Message.find(
-      { receiverId: recieverForeignID },
-      function (err, message) {
-        if (err) return handleError(err);
-        return messages;
-      }
-    );
+      { receiverId: recieverForeignID }).lean();
+    messages.forEach(message => messagesencoded.push({
+      "messageId": message.messageId, 
+      "senderId": message.senderId, 
+      "foreignId": message.receiverId, 
+      "messageContent": message.messageContent, 
+      "timestamp": message.timestamp}))
+    return messagesencoded
   } catch (error) {
     console.log(error);
     console.log("findMessagesForUser failed");
+  }
+}
+
+async function findReceivedMessages(senderForeignId){
+  console.log("Connect.js findReadMessages");
+  try {
+    var messages = [];
+    var messagesencoded = [];
+    messages = await Message.find({ senderId: senderForeignId,status:"ClientReceived" }).lean();
+    messages.forEach(message => messagesencoded.push({
+      "messageId": message.messageId, 
+      "senderId": message.senderId, 
+      "status": message.status
+   }))
+    return messagesencoded
+  } catch (error) {
+    console.log(error);
+    console.log("findReadMessages failed");
+  }
+}
+
+
+async function replaceMessage(messageObject){
+  console.log("Connect.js replaceMessage");
+  try {
+    //Replaces old Messages. So kann Verbindlichkeit gergestellt werden.
+    status = await Message.findOneAndReplace({messageId:messageObject.messageId},messageObject)
+    console.log(status)
+    console.log("Message was overwritten.")
+    return true
+  } catch (error) {
+    console.log(error);
+    console.log("Overwride of the Old Message failed");
+    return false
+  }
+
+}
+
+async function senderForeignIdWithMessageId(messageId){
+  console.log("Connect.js senderForeignIDFormessageID");
+  try {
+    var message = await Message.findOne({senderId:messageId});
+    console.log(message.senderId)
+    //SenderId = ForeignID of Sender
+    return message.senderId
+  } catch (error) {
+    console.log(error);
+    console.log("findForeignIDforUser failed");
   }
 }
 
@@ -169,7 +220,7 @@ async function deleteMessage(deleteThisMessage){
       if (err) return handleError(err);}
   } catch (error) {
     console.log(error);
-    console.log("deleteMessages failed");
+    console.log("Message wasnt saved Online, so it failed");
   }
 }
 
@@ -298,6 +349,9 @@ module.exports = {
   findUserPermanentForeignId,
   findUserPermanentId,
   findMessagesForUser,
+  findReceivedMessages,
+  senderForeignIdWithMessageId,
+  replaceMessage,
   deleteMessage,
   changePhonenumber,
   changePseudonym,

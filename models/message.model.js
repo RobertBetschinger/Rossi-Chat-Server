@@ -10,6 +10,7 @@ const msgSchema = new mongoose.Schema(
     timestamp: String,
     messageContent: String,
     receiverId: String,
+    status: String,
   },
   { versionKey: false }
 );
