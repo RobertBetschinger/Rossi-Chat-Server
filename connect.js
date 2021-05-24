@@ -171,11 +171,8 @@ async function findReceivedMessages(senderForeignId){
     var messages = [];
     var messagesencoded = [];
     messages = await Message.find({ senderId: senderForeignId,status:"ClientReceived" }).lean();
-    messages.forEach(message => messagesencoded.push({
-      "messageId": message.messageId, 
-      "senderId": message.senderId, 
-      "status": message.status
-   }))
+    messages.forEach(message => messagesencoded.push(
+      message.messageId))
     return messagesencoded
   } catch (error) {
     console.log(error);
