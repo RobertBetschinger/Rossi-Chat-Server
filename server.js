@@ -133,6 +133,7 @@ io.on("connection", function (socket) {
           timestamp: message.timestamp,
           messageContent: message.messageContent,
           receiverId: message.foreignId,
+          forwardKey: message.forwardKey
         };
         await mongodb.addMessage(messageObject);
         console.log("Message Added to DB");

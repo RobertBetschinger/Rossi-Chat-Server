@@ -7,6 +7,7 @@ const keyExchangeSchema = new mongoose.Schema(
     receiverForeignId: String,
     senderPublicKey: String,
     timestamp: String,
+    forwardkey: String,
     status: String,
   },
   { versionKey: false }
