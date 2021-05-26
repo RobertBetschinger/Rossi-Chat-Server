@@ -75,7 +75,7 @@ io.on("connection", function (socket) {
     }
   });
 
-  // 2 Faktoren werden verifiziert
+  // Vor oder Nach der Erstellung des User Objects in der DB?
   socket.on("verify-sms-token", async (object, answer) => {
     console.log("Server.js verify sms token");
     try {

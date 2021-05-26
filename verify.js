@@ -13,7 +13,7 @@ async function sendVerificationSMS(phonenumber){
             if (err) {
                 reject(err)
             }
-            resolve(response.id);
+            resolve(response);
             console.log("Server request to Messagebird API answered: " + response.id)
         });
       });
