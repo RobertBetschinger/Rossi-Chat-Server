@@ -210,10 +210,10 @@ async function senderForeignIdWithMessageId(messageId){
   }
 }
 
-async function deleteMessage(deleteThisMessage){
+async function deleteMessage(deleteMessages){
   console.log("Connect.js findMessagesForUser");
   try {
-    Message.deleteOne({messageId:deleteThisMessage}),function (err, message) {
+    Message.deleteOne({messageId: {$in:deleteMessages}}),function (err, message) {
       if (err) return handleError(err);}
   } catch (error) {
     console.log(error);
