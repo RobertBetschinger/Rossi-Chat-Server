@@ -29,11 +29,13 @@ passport.use(new JWTStrategy({
    
       const user = await mongodb.findUserByNumber(jwtPayload.number);
       if (!user) {
+        console.log("User unecht")
           return done(null, false);
       }
-      console.log("USer echt")
+      console.log("User echt")
       return done(null, user);
   } catch (error) {
+    console.log("User unecht")
       return (error, false);
   }
 }));
@@ -85,6 +87,11 @@ const usersCurrentlyOnline = [];
 io.on("connection", function (socket) {
   console.log("a user connected");
   log('new socket connection');
+
+  socket.on('message', (message) => {
+    log(`Socket.IO event 'message' from client with payload: ${message}`);
+    socket.emit('message', `server response: ${message}`);
+});
 
 
 
