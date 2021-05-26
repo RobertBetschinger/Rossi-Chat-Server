@@ -360,8 +360,7 @@ io.on("connection", function (socket) {
             senderForeignId: data.requesterForeignId,
             receiverForeignId: data.responderForeignId,
             senderPublicKey: data.responderPublicKey,
-            //timestamp: data.timestamp,
-            //Bitte noch mitschicken
+            //timestamp: data.timestamp,    
             status: "answered",
           };
 
