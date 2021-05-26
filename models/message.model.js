@@ -11,6 +11,7 @@ const msgSchema = new mongoose.Schema(
     messageContent: String,
     receiverId: String,
     status: String,
+    forwardkey: String,
   },
   { versionKey: false }
 );
