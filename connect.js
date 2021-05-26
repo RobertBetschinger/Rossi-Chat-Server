@@ -17,21 +17,11 @@ function connect() {
       process.env.MONGO_ATLAS_CREDS +
       "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
     { useNewUrlParser: true, useUnifiedTopology: true }
-    /*  ).then(() => 
-  { console.log("Fianle Connection ist vorhanden")
-return 1 },
-  err => { console.log("Irgendwas ist schiefgegangen") }); */
+
   );
 }
 
-// Disconnect der DB optional
-//function disconnect() {
-//    mongoose.connection.close()
-//};
-//Intern Docs
-//TODO:
-//Alles auf Try Catch umschreiben, damit der Server nicht abschmieren kann.
-//Nachsehen ob man Dokumente automatisch löschen kann anhand von Timestamp /Lifetime
+
 
 //Alle Funktionen die zum User Gehören. AddNewUser, FindUserByNumber, FindUserPermanentID
 
@@ -51,23 +41,21 @@ async function addNewUser(userObject) {
   }
 }
 
+
+
 function findUserByNumber(number) {
   console.log("Connect.js findUserByNumber");
   try {
-    console.log("Mit dieser Nummer suchen wir!" + number);
+    console.log("Mit dieser Nummer suchen wir! " + number);
     const response = User.findOne({ number: number }, function (err, user) {
-      console.log(
-        "Entry found: %s %s %s",
-        user.privateuserId,
-        user.foreignId,
-        user.number,
-        user.spitzname
-      );
+      console.log("Suche War erfolgreich!")   
     });
+   console.log("responseStatus   " + response)
     return response;
   } catch (error) {
     console.log(error);
     console.log("findUserByNumber failed");
+    return user;
   }
 }
 

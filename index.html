@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Socket.IO with JWT Authentication</title>
+</head>
+<body>
+    <h1>Socket.IO with JWT Authentication</h1>
+    <textarea style="width: 300px; height: 300px"></textarea>
+    <br>
+    <button onclick="sendMessage()">Send message</button>
+    
+    <!-- Imports Socket.IO client library from CDN. Pay attention, the
+        version of the client lib must match the version of the NPM package
+        `socket.io` that is used in the Node.js backend. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        // Initiates the Socket.IO connection to the Node.js backend
+        const socket = io.connect('',{
+            extraHeaders: {
+        Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJfdm05aXgzemRjIiwiZm9yZWlnbklkIjoiX3YwMnp0bGY3OCIsIm51bWJlciI6IjAxNzYzMDE0MzgxOCIsInNwaXR6bmFtZSI6IkJlaXNwaWVsc3BpdHpuYW1lIiwiaWF0IjoxNTE2MjM5MDIyfQ.EyutSnEGE9ShftjFZ7AjgcMabCeQbJ9uplxiVvAPat0"}, 
+        });
+
+
+        //Falscher Token:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJfdm05aXgzemRjIiwiZm9yZWlnbklkIjoiX3YwMnp0bGY3OCIsIm51bWJlciI6IjAxNzYzMDE0MzIxOTM5MTEzNDEyMzEyIiwic3BpdHpuYW1lIjoiQmVpc3BpZWxzcGl0em5hbWUiLCJpYXQiOjE1MTYyMzkwMjJ9.EiMOwP3F4ArgTy0_xxBuL_2xYmgW8O7H0gZXhn0w3fk
+        socket.on('connect', () => {
+            log('Connected to server');
+        });
+        socket.on('message', (message) => {
+            log(message);
+        })
+        socket.on('diconnect', () => {
+            log('Disconnected from server');
+        });
+
+        function log(message) {
+            document.getElementsByTagName('textarea')[0].value = document.getElementsByTagName('textarea')[0].value + '\n' + message;
+        }
+
+        /**
+         * Emits a `message` event with the payload `Hello, world` which
+         * is send via the WebSocket connection to the Node.js backend.
+         */
+        function sendMessage() {
+            socket.emit('message', 'Hello, world');
+        }
+    </script>
+</body>
+</html>

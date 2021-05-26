@@ -1,22 +1,68 @@
+'use strict'
 var app = require("express")();
 var server = require("http").createServer(app);
 var io = require("socket.io")(server);
-const cors = require("cors");
-const router = require("./router");
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 const mongodb = require("./connect");
+const path  = require("path");
 
-const User = require("./models/user.model");
-const { resolve } = require("path");
-const { rejects } = require("assert");
-const { response } = require("express");
+const passport = require('passport');
+const JWTStrategy = require('passport-jwt').Strategy;
+const ExtractJWT = require('passport-jwt').ExtractJwt;
+
+const secret = process.env.SECRET || 'secret';
+
+
+passport.use(new JWTStrategy({
+  jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+  jsonWebTokenOptions: {
+      ignoreExpiration: false,
+  },
+  secretOrKey: secret,
+  algorithms: ['HS256'],
+}, async (jwtPayload, done) => {
+  try {
+   
+    console.log("Das ist der Payload1  " + jwtPayload.sub)
+    console.log("Das ist der Payload2  " + jwtPayload.foreignId)
+    console.log("Das ist der Payload3  " + jwtPayload.number)
+   
+      const user = await mongodb.findUserByNumber(jwtPayload.number);
+      if (!user) {
+          return done(null, false);
+      }
+      console.log("USer echt")
+      return done(null, user);
+  } catch (error) {
+      return (error, false);
+  }
+}));
+
+passport.serializeUser(function (user, done) {
+  if (user) done(null, user);
+});
+
+passport.deserializeUser(function (id, done) {
+  done(null, id);
+});
+
+const wrapMiddlewareForSocketIo = middleware => (socket, next) => middleware(socket.request, {}, next);
+io.use(wrapMiddlewareForSocketIo(passport.initialize()));
+io.use(wrapMiddlewareForSocketIo(passport.session()));
+io.use(wrapMiddlewareForSocketIo(passport.authenticate(['jwt'])));
+
+
+
+
+
+
+
+
+
 
 const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 
-//Array with socketsId and the corresponding foreignID
-const usersCurrentlyOnline = [];
-
-
+//Aufgbau zu Mongo DB
 mongodb.connect().then(() => {
 console.log("Connection zu MongoDB ist aufgebaut") 
 createServer()},
@@ -24,11 +70,24 @@ err => {
 console.log("Keine Connection Zu MongoDB Möglich. Server wird nicht gestartet")
 console.log(err)})
 
+function log(...args) {
+  console.log(new Date(), ...args);
+}
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+}); 
+
+
+//Array with socketIds and the corresponding foreignID
+const usersCurrentlyOnline = [];
 
 io.on("connection", function (socket) {
   console.log("a user connected");
-  //var connectionStatus = mongodb.connect();
-  //console.log(connectionStatus);
+  log('new socket connection');
+
+
+
   
 
   //Disconnect
@@ -505,6 +564,8 @@ var PrivateID = function () {
 
 //This Part has to be at the bottom of the Code
 
+const cors = require("cors");
+const router = require("./router");
 function createServer(){
 app.use(router);
 app.use(cors());
