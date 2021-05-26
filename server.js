@@ -1,21 +1,24 @@
 var app = require("express")();
 var server = require("http").createServer(app);
-var io = require("socket.io")(server);
+var io = require("socket.io")(server,{
+  cors: {
+    origin: "http://127.0.0.1:5500"
+  }});
 const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
 const mongodb = require("./connect");
-
-const User = require("./models/user.model");
-const { resolve } = require("path");
-const { rejects } = require("assert");
-const { response } = require("express");
-
 const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
+
+const secret = process.env.SECRET || 'secret';
+const jwt = require('jsonwebtoken');
+
+
+
+
 
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
-
 mongodb.connect().then(
   () => {
     console.log("Connection zu MongoDB ist aufgebaut");
@@ -29,7 +32,24 @@ mongodb.connect().then(
   }
 );
 
-io.on("connection", function (socket) {
+io.use(function(socket, next){
+  console.log("Middleware runs.")
+  if (socket.handshake.query && socket.handshake.query.token){
+    jwt.verify(socket.handshake.query.token, 'secret', function(err, decoded) {
+      if (err) {
+        console.log(err) 
+        return next(new Error('Authentication error'));
+      }
+      socket.decoded = decoded;
+      console.log(decoded)
+      next();
+    });
+  }
+  else {
+    next(new Error('Authentication error'));
+  }    
+}).on("connection", function (socket) {
+
   console.log("a user connected");
   //var connectionStatus = mongodb.connect();
   //console.log(connectionStatus);
