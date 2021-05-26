@@ -241,6 +241,20 @@ io.on("connection", function (socket) {
 
   })
 
+  socket.on("conclude-messages-exchange", async(my_id,messageIds,answer)=>{
+  //Auth einbauen
+  console.log("Server.js conclude-messages-exchange")
+    try {
+    var deleteMessagesStatus = await mongodb.deleteMessage(messageIds)
+      console.log(deleteMessagesStatus)
+      answer(true)
+  } catch (error) {
+    console.log(error)
+    console.log("Nachrichten konnten nicht gelöscht werden.")
+    answer(false)
+  }
+  
+  })
 
   //Instant einrichten
   //Key Exchange Funktionen:
