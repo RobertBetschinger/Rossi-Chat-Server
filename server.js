@@ -65,6 +65,7 @@ io.on("connection", function (socket) {
         // spitzname: "Beispielspitzname",
       };
       var birdId = await msgbird.sendVerificationSMS(preUserObject.number);
+      console.log("Messagebird SMS sent and ID creation successfull: " + birdId)
       await mongodb.addNewUser(preUserObject);
       answer(preUserObject);
     } catch (error) {
