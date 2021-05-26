@@ -1,22 +1,19 @@
-
-   
-
 const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 
 
-function sendVerificationSMS(phonenumber){
+async function sendVerificationSMS(phonenumber){
     try {
         var params = {
             originator: "Rossi Chat",
             type: "sms",
-            timeout: "100"
+            timeout: "60"
         }
      return new Promise((resolve, reject)=>{
         messagebird.verify.create(phonenumber, params, function (err, response) {
             if (err) {
                 reject(err)
             }
-            resolve(response);
+            resolve(response.id);
         });
       });
     } catch (error) {
@@ -30,11 +27,11 @@ console.log(response)
 }
 
 //sendVerificationMessage("+49016092606699")
-smsobject = {
-    id:""
-}
+
 function sendVerificationMessagePromise(phonenumber){
-    
+    smsobject = {
+        id:""
+    }
     try {
         var params = {
             originator: "Rossi Chat",
@@ -47,7 +44,7 @@ function sendVerificationMessagePromise(phonenumber){
                 reject(err)
             }
             smsobject.id = response.id
-            resolve(response);
+            resolve(response.id);
         })    
 
       })
@@ -80,7 +77,7 @@ async function waitForMessagebirdAnswer(nummer){
    
 
 
-function verifyMessagebirdToken(id, token){
+async function verifyMessagebirdToken(id, token){
     try {
      return new Promise((resolve, reject)=>{
         messagebird.verify.verify(id, token, function (err, response) {
@@ -102,3 +99,7 @@ async function waitForTokenCheck(id, token){
     return result.status
     };
 
+module.exports = {
+    sendVerificationSMS,
+    verifyMessagebirdToken,
+}

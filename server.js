@@ -5,12 +5,12 @@ const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
 const mongodb = require("./connect");
+const msgbird = require("./verify")
 
 const User = require("./models/user.model");
 const { resolve } = require("path");
 const { rejects } = require("assert");
 const { response } = require("express");
-
 const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 
 //Array with socketsId and the corresponding foreignID
@@ -54,7 +54,7 @@ io.on("connection", function (socket) {
 
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
-    console.log("Server.Js request-registration");
+    console.log("Server.js request-registration");
     try {
       var privateid = PrivateID();
       var forid = ID();
@@ -64,12 +64,27 @@ io.on("connection", function (socket) {
         number: object.phonenumber,
         // spitzname: "Beispielspitzname",
       };
+      var birdId = await msgbird.sendVerificationSMS(preUserObject.number);
       await mongodb.addNewUser(preUserObject);
       answer(preUserObject);
     } catch (error) {
       console.error(error);
       //Auf Client Seite abfangen
       answer(false);
+    }
+  });
+
+  // 2 Faktoren werden verifiziert
+  socket.on("verify-sms-token", async (object, answer) => {
+    console.log("Server.js verify sms token");
+    try {
+      var result = await msgbird.verifyMessagebirdToken(birdId,object);
+      if (result.status === "verified") {
+        answer = result.status;
+      }
+    } catch (error) {
+      console.error(error);
+      answer("rejected");
     }
   });
 
