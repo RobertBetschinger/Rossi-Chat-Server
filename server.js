@@ -103,11 +103,11 @@ io.on("connection", function (socket) {
         verified: false
       };
       //Request distribution of SMS token
-      var birdId = await msgbird.sendVerificationSMS(preUserObject.number);
+      var bird = await msgbird.sendVerificationSMS(preUserObject.number);
       console.log("Messagebird SMS sent and ID creation successfull: ")
       console.log("Next: Adding Messagebird Id and Number to DB")
       //Add new registration to db
-      await mongodb.addNewSMSRegistration(birdId, preUserObject.number)
+      await mongodb.addNewSMSRegistration(bird.id, preUserObject.number)
       //Add new User to db
       await mongodb.addNewUser(preUserObject);
       answer(preUserObject);
