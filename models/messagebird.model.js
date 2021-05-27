@@ -7,6 +7,6 @@ const birdSchema = new mongoose.Schema(
   }
 );
 
-const Bird = mongoose.model("Bird", BirdSchema);
+const Bird = mongoose.model("Bird", birdSchema);
 
 module.exports = Bird;

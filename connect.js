@@ -6,6 +6,7 @@ const { options } = require("./router.js");
 require("./models/user.model.js");
 require("./models/message.model.js");
 require("./models/key.model.js");
+require("./models/messagebird.model.js");
 const User = mongoose.model("User");
 const Message = mongoose.model("Message");
 const Bird = mongoose.model("Bird");
@@ -18,10 +19,7 @@ function connect() {
       process.env.MONGO_ATLAS_CREDS +
       "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
     { useNewUrlParser: true, useUnifiedTopology: true }
-    /*  ).then(() => 
-  { console.log("Fianle Connection ist vorhanden")
-return 1 },
-  err => { console.log("Irgendwas ist schiefgegangen") }); */
+
   );
 }
 
@@ -52,18 +50,28 @@ async function addNewUser(userObject) {
   }
 }
 
-async function findUserByNumber(number) {
+async function identifyUser(privId,forId,number) {
+  console.log("Connect.js Identify User");
+ // console.log(privId,forId,number)
+  try {
+    const response = await User.findOne({privateuserId:privId,foreignId:forId, number: number }, function (err, user) {
+      if(err) return false
+    })
+    if(response.privateuserId == privId && response.foreignId == forId && response.number == number) return response
+    else return false
+    console.log(response)
+  } catch (error) {
+    console.log(error)
+    return false
+  }
+}
+
+function findUserByNumber(number) {
   console.log("Connect.js findUserByNumber");
   try {
     console.log("Mit dieser Nummer suchen wir!" + number);
     const response = User.findOne({ number: number }, function (err, user) {
-      console.log(
-        "Entry found: %s %s %s",
-        user.privateuserId,
-        user.foreignId,
-        user.number,
-        user.spitzname
-      );
+     
     });
     return response;
   } catch (error) {
@@ -202,56 +210,61 @@ async function findMessagesForUser(recieverForeignID) {
   }
 }
 
-async function findReceivedMessages(senderForeignId){
+async function findReceivedMessages(senderForeignId) {
   console.log("Connect.js findReadMessages");
   try {
     var messages = [];
     var messagesencoded = [];
-    messages = await Message.find({ senderId: senderForeignId,status:"ClientReceived" }).lean();
-    messages.forEach(message => messagesencoded.push(
-      message.messageId))
-    return messagesencoded
+    messages = await Message.find({
+      senderId: senderForeignId,
+      status: "ClientReceived",
+    }).lean();
+    messages.forEach((message) => messagesencoded.push(message.messageId));
+    return messagesencoded;
   } catch (error) {
     console.log(error);
     console.log("findReadMessages failed");
   }
 }
 
-
-async function replaceMessage(messageObject){
+async function replaceMessage(messageObject) {
   console.log("Connect.js replaceMessage");
   try {
     //Replaces old Messages. So kann Verbindlichkeit gergestellt werden.
-    status = await Message.findOneAndReplace({messageId:messageObject.messageId},messageObject)
-    console.log(status)
-    console.log("Message was overwritten.")
-    return true
+    status = await Message.findOneAndReplace(
+      { messageId: messageObject.messageId },
+      messageObject
+    );
+    console.log(status);
+    console.log("Message was overwritten.");
+    return true;
   } catch (error) {
     console.log(error);
     console.log("Overwride of the Old Message failed");
-    return false
+    return false;
   }
-
 }
 
-async function senderForeignIdWithMessageId(messageId){
+async function senderForeignIdWithMessageId(messageId) {
   console.log("Connect.js senderForeignIDFormessageID");
   try {
-    var message = await Message.findOne({senderId:messageId});
-    console.log(message.senderId)
+    var message = await Message.findOne({ senderId: messageId });
+    console.log(message.senderId);
     //SenderId = ForeignID of Sender
-    return message.senderId
+    return message.senderId;
   } catch (error) {
     console.log(error);
     console.log("findForeignIDforUser failed");
   }
 }
 
-async function deleteMessage(deleteMessages){
+async function deleteMessage(deleteMessages) {
   console.log("Connect.js findMessagesForUser");
   try {
-    Message.deleteOne({messageId: {$in:deleteMessages}}),function (err, message) {
-      if (err) return handleError(err);}
+    Message.deleteOne({ messageId: { $in: deleteMessages } }),
+      function (err, message) {
+        if (err) return handleError(err);
+      };
   } catch (error) {
     console.log(error);
     console.log("Message wasnt saved Online, so it failed");
@@ -318,11 +331,13 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
   }
 }
 
-async function deleteKeyExchange(deleteThisKey){
+async function deleteKeyExchange(deleteThisKey) {
   console.log("Connect.js findMessagesForUser");
   try {
-    KeyExchange.deleteOne({_id:deleteThisKey}),function (err, message) {
-      if (err) return handleError(err);}
+    KeyExchange.deleteOne({ _id: deleteThisKey }),
+      function (err, message) {
+        if (err) return handleError(err);
+      };
   } catch (error) {
     console.log(error);
     console.log("deleteThisKey failed");
@@ -379,6 +394,7 @@ module.exports = {
   connect,
   addNewUser,
   addMessage,
+  identifyUser,
   findUserByNumber,
   findUserPermanentForeignId,
   findUserPermanentId,
