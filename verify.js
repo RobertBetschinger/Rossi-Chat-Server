@@ -14,7 +14,6 @@ async function sendVerificationSMS(phonenumber) {
                     reject(err)
                 }
                 resolve(response);
-                console.log("Server request to Messagebird API answered: " + response.id)
             });
         });
     } catch (error) {
