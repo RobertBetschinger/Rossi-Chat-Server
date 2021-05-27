@@ -77,6 +77,7 @@ io.on("connection", function (socket) {
       "User ist noch nicht authentifiziert. Keine Berechtigungen. Wird nicht In Online DB eingetragen."
     );
   }
+
   //Disconnect
   socket.on("disconnect", function () {
     console.log("a user disconnected");
@@ -90,7 +91,6 @@ io.on("connection", function (socket) {
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
     console.log("Server.js request-registration");
-    answer(true);
     try {
       //Create IDs
       var privateid = PrivateID();
@@ -108,18 +108,16 @@ io.on("connection", function (socket) {
       console.log("Next: Adding Messagebird Id and Number to DB")
       //Add new registration to db
       await mongodb.addNewSMSRegistration(birdId, preUserObject.number)
-      //Add new User do db
+      //Add new User to db
       await mongodb.addNewUser(preUserObject);
       answer(preUserObject);
     } catch (error) {
       console.error(error);
-      answer(false);
+      answer(error);
     }
   });
 
   //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an
-
-  // Vor oder Nach der Erstellung des User Objects in der DB?
   socket.on("verify-sms-token", async (object, answer) => {
     console.log("Server.js verify sms token");
     object = {
@@ -133,7 +131,7 @@ io.on("connection", function (socket) {
         //update DB and change status to verified
         var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
         var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject.privateId);
-        answer(newUserObject.verified)
+        answer("verified status: "+ newUserObject.verified)
       }
     } catch (error) {
       console.error(error);
