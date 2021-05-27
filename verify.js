@@ -13,7 +13,7 @@ async function sendVerificationSMS(phonenumber) {
                 if (err) {
                     reject(err)
                 }
-                resolve(response);
+                resolve(response.id);
             });
         });
     } catch (error) {
