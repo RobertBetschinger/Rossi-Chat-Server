@@ -29,7 +29,7 @@ async function verifyMessagebirdToken(id, token) {
                 if (err) {
                     reject(err)
                 }
-                resolve(response.status);
+                resolve(response);
             });
         });
     } catch (error) {

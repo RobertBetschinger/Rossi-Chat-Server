@@ -8,6 +8,7 @@ require("./models/message.model.js");
 require("./models/key.model.js");
 const User = mongoose.model("User");
 const Message = mongoose.model("Message");
+const Bird = mongoose.model("Bird");
 const KeyExchange = mongoose.model("KeyExchange");
 
 function connect() {
@@ -51,7 +52,7 @@ async function addNewUser(userObject) {
   }
 }
 
-function findUserByNumber(number) {
+async function findUserByNumber(number) {
   console.log("Connect.js findUserByNumber");
   try {
     console.log("Mit dieser Nummer suchen wir!" + number);
@@ -69,6 +70,41 @@ function findUserByNumber(number) {
     console.log(error);
     console.log("findUserByNumber failed");
   }
+}
+
+async function addNewSMSRegistration(birdId, phonenumber) {
+  console.log("Adding new SMS Registration to DB");
+  birdobject = {
+    bird: birdId,
+    phonenumber: phonenumber,
+    token: ""
+  }
+  var bird = new Bird(birdobject);
+  bird.save((err, doc) => {
+    if (!err) {
+      console.log("User added to DB with birdId, phonenumber, token");
+      return doc;
+    }
+})
+};
+
+async function findUserByNumberInMessagebird(number) {
+  console.log("Atempting to find user BirdId in DB")
+  try {
+    const res = await Bird.findOne({phonenumber: number});
+    return res.birdId;
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+async function updateUserVerificationStatus(privateuserId) {
+  status = await User.findOneAndUpdate({privateuserId:privateuserId},{$set:{verified:true}}, {new: true}, (err,doc)=>{
+    if (err) {
+      return err;
+    }
+    return doc
+  })
 }
 
 async function findUserPermanentForeignId(seachForThatPermanentID) {
@@ -357,4 +393,7 @@ module.exports = {
   searchForInitiatedExchanges,
   searchForAnsweredExchanges,
   deleteKeyExchange,
+  addNewSMSRegistration,
+  findUserByNumberInMessagebird,
+  updateUserVerificationStatus,
 };

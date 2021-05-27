@@ -59,19 +59,27 @@ io.on("connection", function (socket) {
   socket.on("request-registration", async (object, answer) => {
     console.log("Server.js request-registration");
     try {
+      //Create IDs
       var privateid = PrivateID();
       var forid = ID();
+      //Create Userobject with default verification status: false
       const preUserObject = {
         privateuserId: privateid,
         foreignId: forid,
         number: object.phonenumber,
+        verified: false
       };
+      //Request distribution of SMS token
       var birdId = await msgbird.sendVerificationSMS(preUserObject.number);
       console.log("Messagebird SMS sent and ID creation successfull: ")
+      console.log("Next: Adding Messagebird Id and Number to DB")
+      //Add new registration to db
+      await mongodb.addNewSMSRegistration(birdId, preUserObject.number)
+      //Add new User do db
       await mongodb.addNewUser(preUserObject);
       answer(preUserObject);
     } catch (error) {
-      console.error(error);  
+      console.error(error);
       answer(false);
     }
   });
@@ -79,10 +87,18 @@ io.on("connection", function (socket) {
   // Vor oder Nach der Erstellung des User Objects in der DB?
   socket.on("verify-sms-token", async (object, answer) => {
     console.log("Server.js verify sms token");
+    object = {
+      phonenumber: object.phonenumber,
+      token: object.token
+    }
     try {
-      var result = await msgbird.verifyMessagebirdToken(birdId,object);
+      var birdId = await mongodb.findUserByNumberInMessagebird(object.phonenumber);
+      var result = await msgbird.verifyMessagebirdToken(birdId, object.token);
       if (result.status === "verified") {
-        answer = result.status;
+        //update DB and change status to verified
+        var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
+        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject.privateId);
+        answer(newUserObject.verified)
       }
     } catch (error) {
       console.error(error);
@@ -111,7 +127,7 @@ io.on("connection", function (socket) {
     console.log("das ist die ReceiverID" + message.foreignId);
     console.log(
       "Das ist die Wahrheit darüber ob der Chat Partner Online ist " +
-        isOnline(message.foreignId)
+      isOnline(message.foreignId)
     );
     if (isOnline(message.foreignId)) {
       console.log("the current Chat partner ist online");
@@ -181,7 +197,7 @@ io.on("connection", function (socket) {
 
 
 
-  socket.on("message-received", async (messageId,senderID,answer) => {
+  socket.on("message-received", async (messageId, senderID, answer) => {
     //Auth muss noch  eingebaut werden.
     console.log("Server.js messsage-received");
     //Nachricht abspeichern das sie gelesen wurde.
@@ -219,8 +235,8 @@ io.on("connection", function (socket) {
   });
 
 
-   //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
-   socket.on("who-received-my-messages", async function (data, answer) {
+  //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
+  socket.on("who-received-my-messages", async function (data, answer) {
     console.log("Server.Js got-new-messages?");
     //Als erstes überprüfen wir ob die ID berechtigt ist. erlaubt ist
     var matchingForeignId;
@@ -472,9 +488,9 @@ io.on("connection", function (socket) {
         if (numberchanged === true) {
           answer(
             "Phonenumber of user" +
-              userObject.userId +
-              "has been changed to" +
-              newnumber
+            userObject.userId +
+            "has been changed to" +
+            newnumber
           );
         }
       } catch {
@@ -496,9 +512,9 @@ io.on("connection", function (socket) {
         if (nicknamechanged === true) {
           answer(
             "Phonenumber of user" +
-              userObject.userId +
-              "has been changed to" +
-              newNickname
+            userObject.userId +
+            "has been changed to" +
+            newNickname
           );
         }
       } catch {
