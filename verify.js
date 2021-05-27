@@ -1,4 +1,4 @@
-const messagebird = require("messagebird")("YZMXZpserP9Mc4KmmJ1a0k09A");
+const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 
 
 function sendVerificationSMS(phonenumber) {
