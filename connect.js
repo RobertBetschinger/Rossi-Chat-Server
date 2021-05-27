@@ -53,12 +53,12 @@ async function addNewUser(userObject) {
 
 async function identifyUser(privId,forId,number) {
   console.log("Connect.js Identify User");
-  console.log(privId,forId,number)
+ // console.log(privId,forId,number)
   try {
     const response = await User.findOne({privateuserId:privId,foreignId:forId, number: number }, function (err, user) {
       if(err) return false
     })
-    if(response.privateuserId == privId && response.foreignId == forId && response.number == number) return true
+    if(response.privateuserId == privId && response.foreignId == forId && response.number == number) return response
     else return false
     console.log(response)
   } catch (error) {
