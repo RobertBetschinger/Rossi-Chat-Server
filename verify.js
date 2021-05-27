@@ -1,12 +1,12 @@
 const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 
 
-async function sendVerificationSMS(phonenumber) {
+function sendVerificationSMS(phonenumber) {
     try {
         var params = {
             originator: "Rossi Chat App",
             type: "sms",
-            timeout: "60"
+            timeout: "10000"
         };
         return new Promise((resolve, reject) => {
             messagebird.verify.create(phonenumber, params, function (err, response) {
@@ -22,7 +22,7 @@ async function sendVerificationSMS(phonenumber) {
     }
 };
 
-async function verifyMessagebirdToken(id, token) {
+function verifyMessagebirdToken(id, token) {
     try {
         return new Promise((resolve, reject) => {
             messagebird.verify.verify(id, token, function (err, response) {
