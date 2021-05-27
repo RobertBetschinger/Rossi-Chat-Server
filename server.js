@@ -9,10 +9,21 @@ const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
 const mongodb = require("./connect");
+<<<<<<< HEAD
 const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 const secret = process.env.SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
 const msgbird = require("./verify")
+=======
+const msgbird = require("./verify")
+
+const User = require("./models/user.model");
+const { resolve } = require("path");
+const { rejects } = require("assert");
+const { response } = require("express");
+const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
+
+>>>>>>> 1452a00d49038da25721c7560a12f6249a31b9e6
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
 mongodb.connect().then(
@@ -101,7 +112,11 @@ io.on("connection", function (socket) {
       };
       //Sms wird losgehauen
       var birdId = await msgbird.sendVerificationSMS(preUserObject.number);
+<<<<<<< HEAD
       console.log("Messagebird SMS sent and ID creation successfull: ");
+=======
+      console.log("Messagebird SMS sent and ID creation successfull: ")
+>>>>>>> 1452a00d49038da25721c7560a12f6249a31b9e6
       await mongodb.addNewUser(preUserObject);
       answer(preUserObject);
     } catch (error) {
@@ -144,7 +159,11 @@ io.on("connection", function (socket) {
     } catch (error) {
       console.log(error);
     }
+<<<<<<< HEAD
    }});
+=======
+  });
+>>>>>>> 1452a00d49038da25721c7560a12f6249a31b9e6
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
@@ -186,7 +205,11 @@ io.on("connection", function (socket) {
         console.log("Message could not be added to DB");
       }
     }
+<<<<<<< HEAD
   }});
+=======
+  });
+>>>>>>> 1452a00d49038da25721c7560a12f6249a31b9e6
 
   //Abfragen ob Nachrichten da sind.
   ///Sicherheitslücke
