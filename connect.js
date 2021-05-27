@@ -83,14 +83,13 @@ function findUserByNumber(number) {
 async function addNewSMSRegistration(birdId, phonenumber) {
   console.log("Adding new SMS Registration to DB");
   birdobject = {
-    bird: birdId,
-    phonenumber: phonenumber,
-    token: ""
+    birdId: birdId,
+    phonenumber: phonenumber
   }
   var bird = new Bird(birdobject);
   bird.save((err, doc) => {
     if (!err) {
-      console.log("User added to DB with birdId, phonenumber, token");
+      console.log("User added to DB with birdId, phonenumber");
       return doc;
     }
 })

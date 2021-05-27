@@ -1,10 +1,10 @@
-const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
+const messagebird = require("messagebird")("YZMXZpserP9Mc4KmmJ1a0k09A");
 
 
 function sendVerificationSMS(phonenumber) {
     try {
         var params = {
-            originator: "Rossi Chat App",
+            originator: "Rossi Chat",
             type: "sms",
             timeout: "10000"
         };
@@ -21,6 +21,12 @@ function sendVerificationSMS(phonenumber) {
         console.log("Verify object creation failed");
     }
 };
+test()
+async function test(){
+    var result  = await sendVerificationSMS("+4917630143818")
+    console.log(result.id)
+    }
+
 
 function verifyMessagebirdToken(id, token) {
     try {
