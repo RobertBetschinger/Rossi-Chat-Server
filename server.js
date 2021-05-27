@@ -11,7 +11,7 @@ const User = require("./models/user.model");
 const { resolve } = require("path");
 const { rejects } = require("assert");
 const { response } = require("express");
-const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
+const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
@@ -105,9 +105,6 @@ io.on("connection", function (socket) {
     }
   });
 
-
-
-
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
     console.log("Server.Js send-chat-message-privat");
@@ -149,7 +146,6 @@ io.on("connection", function (socket) {
       }
     }
   });
-
 
   //Abfragen ob Nachrichten da sind.
   ///Sicherheitslücke
