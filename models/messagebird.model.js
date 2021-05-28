@@ -9,4 +9,4 @@ const birdSchema = new mongoose.Schema(
 
 const Bird = mongoose.model("Bird", birdSchema);
 
-module.exports = Bird;
+module.exports = (Bird);

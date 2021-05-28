@@ -34,7 +34,7 @@ function connect() {
 
 //Alle Funktionen die zum User Gehören. AddNewUser, FindUserByNumber, FindUserPermanentID
 
-async function addNewUser(userObject) {
+function addNewUser(userObject) {
   console.log("Connect.js addNewUser");
   try {
     var user = new User(userObject);
@@ -80,19 +80,27 @@ function findUserByNumber(number) {
   }
 }
 
-async function addNewSMSRegistration(birdId, phonenumber) {
-  console.log("Adding new SMS Registration to DB");
-  birdobject = {
-    birdId: birdId,
-    phonenumber: phonenumber
+function addNewSMSRegistration(id, number) {
+  try {
+    console.log("Adding new SMS Registration to DB");
+    birdobject = {
+    birdId: String(id),
+    phonenumber: String(number),
   }
   var bird = new Bird(birdobject);
-  bird.save((err, doc) => {
-    if (!err) {
-      console.log("User added to DB with birdId, phonenumber");
-      return doc;
-    }
-})
+  return new Promise((resolve,reject) => {
+    bird.save((err, doc) => {
+      if (!err) {
+        resolve(doc);
+      }
+      else {
+        reject(err);
+      }
+    })
+  })
+  } catch (error) {
+    console.log(error)
+  }
 };
 
 async function findUserByNumberInMessagebird(number) {
