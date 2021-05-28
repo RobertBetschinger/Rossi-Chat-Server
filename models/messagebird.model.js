@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 
 const birdSchema = new mongoose.Schema(
   {
-    birdId: "",
-    phonenumber: "",
+    birdId: String,
+    phonenumber: String,
   }
 );
 

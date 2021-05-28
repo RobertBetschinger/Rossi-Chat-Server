@@ -108,8 +108,8 @@ io.on("connection", function (socket) {
       //Add new registration to db
       await mongodb.addNewSMSRegistration(bird.id, preUserObject.number);
       //Add new User to db
-      await mongodb.addNewUser(preUserObject);
-      answer(preUserObject);
+      var newUserObject = await mongodb.addNewUser(preUserObject);
+      answer(newUserObject);
     } catch (error) {
       console.error(error);
       answer(error);
@@ -124,12 +124,12 @@ io.on("connection", function (socket) {
       token: object.token
     }
     try {
-      var birdId = await mongodb.findUserByNumberInMessagebird(object.phonenumber);
-      var result = await msgbird.verifyMessagebirdToken(birdId, object.token);
+      var birdobject = await mongodb.findUserByNumberInMessagebird(object.phonenumber);
+      var result = await msgbird.verifyMessagebirdToken(birdobject.birdId, object.token);
       if (result.status === "verified") {
         //update DB and change status to verified
         var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
-        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject.privateId);
+        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject._id);
         answer("verified status: "+ newUserObject.verified)
       }
     } catch (error) {

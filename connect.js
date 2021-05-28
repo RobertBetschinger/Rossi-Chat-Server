@@ -16,8 +16,8 @@ function connect() {
   console.log("attempting connection");
   return mongoose.connect(
     "mongodb+srv://rossi-chat-server:" +
-      process.env.MONGO_ATLAS_CREDS +
-      "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
+    process.env.MONGO_ATLAS_CREDS +
+    "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
     { useNewUrlParser: true, useUnifiedTopology: true }
 
   );
@@ -38,11 +38,15 @@ function addNewUser(userObject) {
   console.log("Connect.js addNewUser");
   try {
     var user = new User(userObject);
-    user.save((err, doc) => {
-      if (!err) {
-        console.log("User added to db");
-        return doc;
-      }
+    return new Promise((resolve, reject) => {
+      user.save((err, doc) => {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(doc);
+        }
+      })
     });
   } catch (error) {
     console.log(error);
@@ -50,14 +54,15 @@ function addNewUser(userObject) {
   }
 }
 
-async function identifyUser(privId,forId,number) {
+
+async function identifyUser(privId, forId, number) {
   console.log("Connect.js Identify User");
- // console.log(privId,forId,number)
+  // console.log(privId,forId,number)
   try {
-    const response = await User.findOne({privateuserId:privId,foreignId:forId, number: number }, function (err, user) {
-      if(err) return false
+    const response = await User.findOne({ privateuserId: privId, foreignId: forId, number: number }, function (err, user) {
+      if (err) return false
     })
-    if(response.privateuserId == privId && response.foreignId == forId && response.number == number) return response
+    if (response.privateuserId == privId && response.foreignId == forId && response.number == number) return response
     else return false
     console.log(response)
   } catch (error) {
@@ -70,63 +75,79 @@ function findUserByNumber(number) {
   console.log("Connect.js findUserByNumber");
   try {
     console.log("Mit dieser Nummer suchen wir!" + number);
-    const response = User.findOne({ number: number }, function (err, user) {
-     
-    });
-    return response;
+    return new Promise((resolve, reject) => {
+      const response = User.findOne({ number: number }, function (err, user) {
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve(user)
+        }
+      });
+    })
   } catch (error) {
     console.log(error);
     console.log("findUserByNumber failed");
   }
-}
+};
+
 
 function addNewSMSRegistration(id, number) {
   try {
     console.log("Adding new SMS Registration to DB");
-    birdobject = {
-    birdId: String(id),
-    phonenumber: String(number),
+    const birdobject = {
+      birdId: id,
+      phonenumber: number
+    }
+    var bird = new Bird(birdobject);
+    return new Promise((resolve, reject) => {
+      bird.save((err, doc) => {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(doc);
+        }
+      })
+    })
+  } catch (error) {
+    console.log(error)
   }
-  var bird = new Bird(birdobject);
-  return new Promise((resolve,reject) => {
-    bird.save((err, doc) => {
-      if (!err) {
-        resolve(doc);
+};
+
+function findUserByNumberInMessagebird(number) {
+  console.log("Atempting to find user BirdId in DB")
+  try {
+    return new Promise((resolve, reject) => {
+      var id = Bird.findOne({ phonenumber: number }, function (err, doc) {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(doc)
+        }
+      });
+    })
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+
+function updateUserVerificationStatus(mongodbId) {
+  return new Promise((resolve, reject) => {
+    User.findOneAndUpdate({ _id: mongodbId }, { $set: { verified: true } }, { new: true }, (err, doc) => {
+      if (err) {
+        reject(err);
       }
       else {
-        reject(err);
+        resolve(doc);
       }
     })
   })
-  } catch (error) {
-    console.log(error)
-  }
 };
 
-async function test() {
-  var result = await addNewSMSRegistration("1234",);
-  console.log(result);
-}
-test();
 
-async function findUserByNumberInMessagebird(number) {
-  console.log("Atempting to find user BirdId in DB")
-  try {
-    const res = await Bird.findOne({phonenumber: number});
-    return res.birdId;
-  } catch (error) {
-    console.log(error)
-  }
-};
-
-async function updateUserVerificationStatus(privateuserId) {
-  status = await User.findOneAndUpdate({privateuserId:privateuserId},{$set:{verified:true}}, {new: true}, (err,doc)=>{
-    if (err) {
-      return err;
-    }
-    return doc
-  })
-}
 
 async function findUserPermanentForeignId(seachForThatPermanentID) {
   console.log("Connect.js findUserPermanentForeignId");
@@ -210,12 +231,13 @@ async function findMessagesForUser(recieverForeignID) {
     messages = await Message.find(
       { receiverId: recieverForeignID }).lean();
     messages.forEach(message => messagesencoded.push({
-      "messageId": message.messageId, 
-      "senderId": message.senderId, 
-      "foreignId": message.receiverId, 
-      "messageContent": message.messageContent, 
+      "messageId": message.messageId,
+      "senderId": message.senderId,
+      "foreignId": message.receiverId,
+      "messageContent": message.messageContent,
       "timestamp": message.timestamp,
-      "forwardKey": message.forwardKey}))
+      "forwardKey": message.forwardKey
+    }))
     return messagesencoded
   } catch (error) {
     console.log(error);

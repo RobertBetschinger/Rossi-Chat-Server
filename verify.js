@@ -1,3 +1,4 @@
+require("dotenv").config();
 const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 
 function sendVerificationSMS(phonenumber) {
@@ -21,10 +22,6 @@ function sendVerificationSMS(phonenumber) {
     }
 };
 
-async function test(){
-    var result  = await sendVerificationSMS()
-    console.log(result.id)
-    }
 
 
 function verifyMessagebirdToken(id, token) {
