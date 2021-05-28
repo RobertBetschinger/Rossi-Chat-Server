@@ -1,4 +1,4 @@
-const messagebird = require("messagebird")("rZOoUgOmENyxyKFoX1dKw0Zrp");
+const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 
 function sendVerificationSMS(phonenumber) {
     try {
@@ -20,9 +20,9 @@ function sendVerificationSMS(phonenumber) {
         console.log("Verify object creation failed");
     }
 };
-test()
+
 async function test(){
-    var result  = await sendVerificationSMS("+4917630143818")
+    var result  = await sendVerificationSMS()
     console.log(result.id)
     }
 

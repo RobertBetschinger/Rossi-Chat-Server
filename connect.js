@@ -103,6 +103,12 @@ function addNewSMSRegistration(id, number) {
   }
 };
 
+async function test() {
+  var result = await addNewSMSRegistration("1234",);
+  console.log(result);
+}
+test();
+
 async function findUserByNumberInMessagebird(number) {
   console.log("Atempting to find user BirdId in DB")
   try {
