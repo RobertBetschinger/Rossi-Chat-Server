@@ -380,49 +380,11 @@ async function deleteKeyExchange(deleteThisKey) {
 }
 
 function changePhonenumber(userId, newnumber) {
-  const responseobject = User.findOneAndUpdate(
-    { userId: userId },
-    { $set: { number: newnumber } },
-    { new: true },
-    function (err, user) {
-      response = false;
-      if (err) {
-        return handleError(err);
-      }
-      console.log(
-        "Entry found: %s %s %s",
-        user.userId,
-        user.number,
-        user.pseudonym
-      );
-      response = true;
-    }
-  );
-  console.log(typeof responseobject);
-  return response;
+  return ("not implemented");
 }
 
 function changePseudonym(userId, newNickname) {
-  const responseobject = User.findOneAndUpdate(
-    { userId: userId },
-    { $set: { spitzname: newNickname } },
-    { new: true },
-    function (err, user) {
-      response = false;
-      if (err) {
-        return handleError(err);
-      }
-      console.log(
-        "Entry found: %s %s %s",
-        user.userId,
-        user.number,
-        user.pseudonym
-      );
-      response = true;
-    }
-  );
-  console.log(typeof responseobject);
-  return response;
+  return("not implemented");
 }
 
 module.exports = {

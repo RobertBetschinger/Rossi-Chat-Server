@@ -12,7 +12,8 @@ const mongodb = require("./connect");
 const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
 const secret = process.env.SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
-const msgbird = require("./verify")
+const jwt = require("jsonwebtoken");
+const msgbird = require("./verify");
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
 mongodb.connect().then(
@@ -36,7 +37,7 @@ mongodb.connect().then(
 io.use(
   jwtAuth.authenticate(
     {
-      secret: "secret", // required, used to verify the token's signature
+      secret: process.env.ACCESS_TOKEN_SECRET, // required, used to verify the token's signature
       algorithm: "HS256", // optional, default to be HS256
       succeedWithoutToken: true,
     },
@@ -129,8 +130,14 @@ io.on("connection", function (socket) {
       if (result.status === "verified") {
         //update DB and change status to verified
         var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
-        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject._id);
-        answer("verified status: "+ newUserObject.verified)
+        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject._id).then(console.log("Userobject verification updated in Database:" + newUserObject));
+        var jwtuser = {
+            sub: newUserObject.privateuserId,
+            foreignId: newUserObject.foreignId,
+            number: newUserObject.number
+        }
+        accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
+        answer(accessToken);
       }
     } catch (error) {
       console.error(error);
