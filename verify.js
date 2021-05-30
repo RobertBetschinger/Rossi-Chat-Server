@@ -1,5 +1,5 @@
 require("dotenv").config();
-const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
+const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 
 function sendVerificationSMS(phonenumber) {
     try {

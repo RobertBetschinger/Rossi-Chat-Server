@@ -9,7 +9,7 @@ const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
 const mongodb = require("./connect");
-const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
+const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 const secret = process.env.SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
 const jwt = require("jsonwebtoken");
@@ -107,10 +107,10 @@ io.on("connection", function (socket) {
       var bird = await msgbird.sendVerificationSMS(String(preUserObject.number)).then(console.log("Messagebird SMS sent and ID creation successfull"));
       console.log("Next: Adding Messagebird Id and Number to DB");
       //Add new registration to db
-      await mongodb.addNewSMSRegistration(bird.id, preUserObject.number);
+      var result = await mongodb.addNewSMSRegistration(bird.id, preUserObject.number);
       //Add new User to db
       var newUserObject = await mongodb.addNewUser(preUserObject);
-      answer(newUserObject);
+      answer(true);
     } catch (error) {
       console.error(error);
       answer(error);
@@ -136,7 +136,7 @@ io.on("connection", function (socket) {
             number: newUserObject.number
         };
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
-        answer(accessToken);
+        answer(jwtuser, accessToken);
       }
     } catch (error) {
       console.error(error);
