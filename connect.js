@@ -236,7 +236,8 @@ async function findMessagesForUser(recieverForeignID) {
       "foreignId": message.receiverId,
       "messageContent": message.messageContent,
       "timestamp": message.timestamp,
-      "forwardKey": message.forwardKey
+      "forwardKey": message.forwardKey,
+      "contentType": message.contentType
     }))
     return messagesencoded
   } catch (error) {

@@ -210,6 +210,7 @@ io.on("connection", function (socket) {
           timestamp: message.timestamp,
           messageContent: message.messageContent,
           receiverId: message.foreignId,
+          contentType: message.contentType,
           forwardKey: message.forwardKey,
         };
         await mongodb.addMessage(messageObject);
