@@ -146,7 +146,7 @@ io.on("connection", function (socket) {
       var result = await msgbird.verifyMessagebirdToken(birdobject.birdId, object.token).then("Messagebird token verified");
       if (result.status === "verified") {
         var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
-        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject._id).then(console.log("Userobject verification updated in Database:" + newUserObject));
+        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject._id).then(console.log("Userobject verification updated in Database"));
         var jwtuser = {
             sub: newUserObject.privateuserId,
             foreignId: newUserObject.foreignId,
