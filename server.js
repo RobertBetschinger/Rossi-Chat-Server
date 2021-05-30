@@ -14,6 +14,7 @@ const secret = process.env.SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
 const jwt = require("jsonwebtoken");
 const msgbird = require("./verify");
+const { mongo } = require("mongoose");
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
 mongodb.connect().then(
@@ -106,7 +107,7 @@ io.on("connection", function (socket) {
       if(object.skipVerification){
         //shortcut to avoid sending messagebird sms
         console.log("Skipping verification")
-        preUserObject.verified = true
+        preUserObject.verified = true;
         var newUserObject = await mongodb.addNewUser(preUserObject);
         if(newUserObject.verified){
           console.log("debug: added user object has verified status")
@@ -119,6 +120,9 @@ io.on("connection", function (socket) {
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
         answer(jwtuser, accessToken)
       } else {
+        //Check for existing registration of phonenumber in mongodb
+        var existance = await mongodb.findExistingRegistration(preUserObject.number);
+        console.log(existance);
         //Request distribution of SMS token
         var bird = await msgbird.sendVerificationSMS(String(preUserObject.number)).then(console.log("Messagebird SMS sent and ID creation successfull"));
         console.log("Next: Adding Messagebird Id and Number to DB");

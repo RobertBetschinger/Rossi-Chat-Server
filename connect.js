@@ -86,11 +86,29 @@ function findUserByNumber(number) {
       });
     })
   } catch (error) {
-    console.log(error);
     console.log("findUserByNumber failed");
+    console.log(error);
   }
 };
 
+function findExistingRegistration (number) {
+  console.log("Checking for existing Registrations with number: " + number);
+  try{
+    return new Promise((resolve,reject)=> {
+      User.exists({number : number}, function (err, status){
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+  } catch (error) {
+    console.log("Search for existing Registrations failed")
+    console.log(error);
+  }
+};
 
 function addNewSMSRegistration(id, number) {
   try {
@@ -412,4 +430,5 @@ module.exports = {
   addNewSMSRegistration,
   findUserByNumberInMessagebird,
   updateUserVerificationStatus,
+  findExistingRegistration,
 };
