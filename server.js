@@ -103,14 +103,31 @@ io.on("connection", function (socket) {
         number: object.phonenumber,
         verified: false
       };
-      //Request distribution of SMS token
-      var bird = await msgbird.sendVerificationSMS(String(preUserObject.number)).then(console.log("Messagebird SMS sent and ID creation successfull"));
-      console.log("Next: Adding Messagebird Id and Number to DB");
-      //Add new registration to db
-      var result = await mongodb.addNewSMSRegistration(bird.id, preUserObject.number);
-      //Add new User to db
-      var newUserObject = await mongodb.addNewUser(preUserObject);
-      answer(true);
+      if(object.skipVerification){
+        //shortcut to avoid sending messagebird sms
+        console.log("Skipping verification")
+        preUserObject.verified = true
+        var newUserObject = await mongodb.addNewUser(preUserObject);
+        if(newUserObject.verified){
+          console.log("debug: added user object has verified status")
+        }
+        var jwtuser = {
+            sub: newUserObject.privateuserId,
+            foreignId: newUserObject.foreignId,
+            number: newUserObject.number
+        };
+        accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
+        answer(jwtuser, accessToken)
+      } else {
+        //Request distribution of SMS token
+        var bird = await msgbird.sendVerificationSMS(String(preUserObject.number)).then(console.log("Messagebird SMS sent and ID creation successfull"));
+        console.log("Next: Adding Messagebird Id and Number to DB");
+        //Add new registration to db
+        var result = await mongodb.addNewSMSRegistration(bird.id, preUserObject.number);
+        //Add new User to db
+        var newUserObject = await mongodb.addNewUser(preUserObject);
+        answer(true);
+      }
     } catch (error) {
       console.error(error);
       answer(error);
