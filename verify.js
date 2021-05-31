@@ -6,7 +6,7 @@ function sendVerificationSMS(phonenumber) {
         var params = {
             originator: "Rossi Chat",
             type: "sms",
-            timeout: "10000"
+            timeout: "60"
         };
         return new Promise((resolve, reject) => {
             messagebird.verify.create(phonenumber, params, function (err, response) {

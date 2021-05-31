@@ -110,6 +110,58 @@ function findExistingRegistration (number) {
   }
 };
 
+function deleteUserDataFromDB (privateid, phonenumber) {
+  console.log("Starting removal of User with id: " + _id);
+  try{
+    const userstatus = new Promise((resolve,reject)=> {
+      User.findOneAndDelete({privateuserId : privateid}, function (err, status){
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+    const messagestatus = new Promise((resolve,reject)=> {
+      Message.deleteMany({ receiverId : privateid }, function (err, status) {
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+    const keystatus = new Promise((resolve,reject) => {
+      KeyExchange.deleteMany({senderPrivateId : privateid }, function (err, status) {
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+    const birdstatus = new Promise((resolve,reject) => {
+      Bird.findOneAndDelete({phonenumber : phonenumber}, function (err, status) {
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+    Promise.all([userstatus, messagestatus, keystatus, birdstatus]).then((values) => {
+      return values
+    });
+  } catch (error) {
+    console.log("Deletion of User Data failed")
+    console.log(error);
+  }
+};
+
 function addNewSMSRegistration(id, number) {
   try {
     console.log("Adding new SMS Registration to DB");
