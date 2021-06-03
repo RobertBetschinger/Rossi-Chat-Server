@@ -111,7 +111,7 @@ function findExistingRegistration (number) {
 };
 
 function deleteUserDataFromDB (privateid, phonenumber) {
-  console.log("Starting removal of User with id: " + _id);
+  console.log("Starting removal of User with id: " + privateid);
   try{
     const userstatus = new Promise((resolve,reject)=> {
       User.findOneAndDelete({privateuserId : privateid}, function (err, status){
