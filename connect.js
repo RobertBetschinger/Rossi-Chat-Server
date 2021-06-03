@@ -483,4 +483,5 @@ module.exports = {
   findUserByNumberInMessagebird,
   updateUserVerificationStatus,
   findExistingRegistration,
+  deleteUserDataFromDB,
 };

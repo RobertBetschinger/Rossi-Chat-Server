@@ -165,6 +165,18 @@ io.on("connection", function (socket) {
     }
   });
 
+  socket.on("alabama", async (object, answer) => {
+    console.log("Deletion of user data initiated");
+    try {
+      var deletionStatus = await mongodb.deleteUserDataFromDB(object.privateId,object.phonenumber)
+      answer("Deletion successfull: " + deletionStatus)
+    } catch (error) {
+      console.error(error);
+      answer("Deletion failed");
+    }
+  });
+
+
   //Privatchat eröffnen
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
     if (!socket.request.user.logged_in) {
