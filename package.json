@@ -16,6 +16,7 @@
     "messagebird": "^3.6.2",
     "mongoose": "^5.12.5",
     "nodemon": "^2.0.7",
+    "rate-limiter-flexible": "^2.2.2",
     "socket.io": "^4.0.1",
     "socketio-jwt": "^4.6.2",
     "socketio-jwt-auth": "^0.2.1"

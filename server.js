@@ -30,6 +30,19 @@ mongodb.connect().then(
   }
 );
 
+
+
+//----- rate limiting -----//
+const { RateLimiterMemory } = require("rate-limiter-flexible")
+//TODO make the limit more adaptable/flexible/add burst limiter
+const rateLimiter = new RateLimiterMemory(
+  {
+    points: 100, // 100 points
+    duration: 1, // per 1 seconds
+  });
+
+
+
 //ToDo: Secret Variable erstellen und evtl. nachsehen wie man JWT verschlüsseln kann
 //Timo: Einbau von JWT erzeugung wenn SMS erfolgreich war. Ich bau das mal die tage. Dann musst du es nur noch einfügen an der richtigen Stelle.
 
@@ -92,6 +105,13 @@ io.on("connection", function (socket) {
 
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.js request-registration");
     try {
       //Create IDs
@@ -140,6 +160,13 @@ io.on("connection", function (socket) {
 
   //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an
   socket.on("verify-sms-token", async (object, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.js verify sms token");
     object = {
       phonenumber: object.phonenumber,
@@ -166,6 +193,13 @@ io.on("connection", function (socket) {
   });
 
   socket.on("alabama", async (object, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Deletion of user data initiated");
     try {
       var deletionStatus = await mongodb.deleteUserDataFromDB(object.privateId,object.phonenumber)
@@ -179,6 +213,13 @@ io.on("connection", function (socket) {
 
   //Privatchat eröffnen
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
@@ -199,6 +240,13 @@ io.on("connection", function (socket) {
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js send-chat-message-privat");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -243,6 +291,13 @@ io.on("connection", function (socket) {
   //Abfragen ob Nachrichten da sind.
   ///Sicherheitslücke
   socket.on("got-new-messages?", async function (data, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -266,6 +321,13 @@ io.on("connection", function (socket) {
   }});
 
   socket.on("message-received", async (messageId, senderID, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
    console.log("Server.js messsage-received");
     //Nachricht abspeichern das sie empfangen wurden.
     if (!socket.request.user.logged_in) {
@@ -307,6 +369,13 @@ io.on("connection", function (socket) {
 
   //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
   socket.on("who-received-my-messages", async function (data, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -334,6 +403,13 @@ io.on("connection", function (socket) {
   //Funktion um Messages zu löschen
   //Nachrichten sind engültig zugestellt und Sender hat dies auch bestätigt bekommen. Nachrichten aus DB löschen
   socket.on("conclude-messages-exchange", async (my_id, messageIds, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.js conclude-messages-exchange");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -353,6 +429,13 @@ io.on("connection", function (socket) {
   //Instant einrichten
   //Key Exchange Funktionen:
   socket.on("initiate-key-exchange", async (data, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js initiate-key-exchange");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -392,6 +475,13 @@ io.on("connection", function (socket) {
    }});
 
   socket.on("online-key-response", async function (data, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js online-key-response");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -436,6 +526,13 @@ io.on("connection", function (socket) {
   }});
 
   socket.on("check-for-key-requests", async function (data, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("server.js check-for-key-requests");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -500,6 +597,13 @@ io.on("connection", function (socket) {
   }});
 
   socket.on("initiated-key-received", async (data, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
