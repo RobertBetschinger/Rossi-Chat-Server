@@ -6,16 +6,18 @@ const { options } = require("./router.js");
 require("./models/user.model.js");
 require("./models/message.model.js");
 require("./models/key.model.js");
+require("./models/messagebird.model.js");
 const User = mongoose.model("User");
 const Message = mongoose.model("Message");
+const Bird = mongoose.model("Bird");
 const KeyExchange = mongoose.model("KeyExchange");
 
 function connect() {
   console.log("attempting connection");
   return mongoose.connect(
     "mongodb+srv://rossi-chat-server:" +
-      process.env.MONGO_ATLAS_CREDS +
-      "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
+    process.env.MONGO_ATLAS_CREDS +
+    "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
     { useNewUrlParser: true, useUnifiedTopology: true }
 
   );
@@ -32,15 +34,19 @@ function connect() {
 
 //Alle Funktionen die zum User Gehören. AddNewUser, FindUserByNumber, FindUserPermanentID
 
-async function addNewUser(userObject) {
+function addNewUser(userObject) {
   console.log("Connect.js addNewUser");
   try {
     var user = new User(userObject);
-    user.save((err, doc) => {
-      if (!err) {
-        console.log("User added to db");
-        return doc;
-      }
+    return new Promise((resolve, reject) => {
+      user.save((err, doc) => {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(doc);
+        }
+      })
     });
   } catch (error) {
     console.log(error);
@@ -48,14 +54,15 @@ async function addNewUser(userObject) {
   }
 }
 
-async function identifyUser(privId,forId,number) {
+
+async function identifyUser(privId, forId, number) {
   console.log("Connect.js Identify User");
- // console.log(privId,forId,number)
+  // console.log(privId,forId,number)
   try {
-    const response = await User.findOne({privateuserId:privId,foreignId:forId, number: number }, function (err, user) {
-      if(err) return false
+    const response = await User.findOne({ privateuserId: privId, foreignId: forId, number: number }, function (err, user) {
+      if (err) return false
     })
-    if(response.privateuserId == privId && response.foreignId == forId && response.number == number) return response
+    if (response.privateuserId == privId && response.foreignId == forId && response.number == number) return response
     else return false
     console.log(response)
   } catch (error) {
@@ -68,15 +75,151 @@ function findUserByNumber(number) {
   console.log("Connect.js findUserByNumber");
   try {
     console.log("Mit dieser Nummer suchen wir!" + number);
-    const response = User.findOne({ number: number }, function (err, user) {
-     
-    });
-    return response;
+    return new Promise((resolve, reject) => {
+      const response = User.findOne({ number: number }, function (err, user) {
+        if (err) {
+          reject(err)
+        }
+        else {
+          resolve(user)
+        }
+      });
+    })
   } catch (error) {
-    console.log(error);
     console.log("findUserByNumber failed");
+    console.log(error);
   }
-}
+};
+
+function findExistingRegistration (number) {
+  console.log("Checking for existing Registrations with number: " + number);
+  try{
+    return new Promise((resolve,reject)=> {
+      User.exists({number : number}, function (err, status){
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+  } catch (error) {
+    console.log("Search for existing Registrations failed")
+    console.log(error);
+  }
+};
+
+function deleteUserDataFromDB (privateid, phonenumber) {
+  console.log("Starting removal of User with id: " + privateid);
+  try{
+    const userstatus = new Promise((resolve,reject)=> {
+      User.findOneAndDelete({privateuserId : privateid}, function (err, status){
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+    const messagestatus = new Promise((resolve,reject)=> {
+      Message.deleteMany({ receiverId : privateid }, function (err, status) {
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+    const keystatus = new Promise((resolve,reject) => {
+      KeyExchange.deleteMany({senderPrivateId : privateid }, function (err, status) {
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+    const birdstatus = new Promise((resolve,reject) => {
+      Bird.findOneAndDelete({phonenumber : phonenumber}, function (err, status) {
+        if(err) {
+          reject(err);
+        }
+        else {
+          resolve(status);
+        }
+      })
+    })
+    Promise.all([userstatus, messagestatus, keystatus, birdstatus]).then((values) => {
+      return values
+    });
+  } catch (error) {
+    console.log("Deletion of User Data failed")
+    console.log(error);
+  }
+};
+
+function addNewSMSRegistration(id, number) {
+  try {
+    console.log("Adding new SMS Registration to DB");
+    const birdobject = {
+      birdId: id,
+      phonenumber: number
+    }
+    var bird = new Bird(birdobject);
+    return new Promise((resolve, reject) => {
+      bird.save((err, doc) => {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(doc);
+        }
+      })
+    })
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+function findUserByNumberInMessagebird(number) {
+  console.log("Atempting to find user BirdId in DB")
+  try {
+    return new Promise((resolve, reject) => {
+      var id = Bird.findOne({ phonenumber: number }, function (err, doc) {
+        if (err) {
+          reject(err);
+        }
+        else {
+          resolve(doc)
+        }
+      });
+    })
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+
+function updateUserVerificationStatus(mongodbId) {
+  return new Promise((resolve, reject) => {
+    filter = {_id: mongodbId};
+    update = {$set:{verified: true}};
+    User.findOneAndUpdate(filter, update, {useFindAndModify: false}, { new: true }, (err, doc) => {
+      if (err) {
+        reject(err);
+      }
+      else {
+        resolve(doc);
+      }
+    })
+  })
+};
+
+
 
 async function findUserPermanentForeignId(seachForThatPermanentID) {
   console.log("Connect.js findUserPermanentForeignId");
@@ -160,12 +303,14 @@ async function findMessagesForUser(recieverForeignID) {
     messages = await Message.find(
       { receiverId: recieverForeignID }).lean();
     messages.forEach(message => messagesencoded.push({
-      "messageId": message.messageId, 
-      "senderId": message.senderId, 
-      "foreignId": message.receiverId, 
-      "messageContent": message.messageContent, 
+      "messageId": message.messageId,
+      "senderId": message.senderId,
+      "foreignId": message.receiverId,
+      "messageContent": message.messageContent,
       "timestamp": message.timestamp,
-      "forwardKey": message.forwardKey}))
+      "forwardKey": message.forwardKey,
+      "contentType": message.contentType
+    }))
     return messagesencoded
   } catch (error) {
     console.log(error);
@@ -343,49 +488,11 @@ async function deleteKeyExchange(deleteThisKey) {
 }
 
 function changePhonenumber(userId, newnumber) {
-  const responseobject = User.findOneAndUpdate(
-    { userId: userId },
-    { $set: { number: newnumber } },
-    { new: true },
-    function (err, user) {
-      response = false;
-      if (err) {
-        return handleError(err);
-      }
-      console.log(
-        "Entry found: %s %s %s",
-        user.userId,
-        user.number,
-        user.pseudonym
-      );
-      response = true;
-    }
-  );
-  console.log(typeof responseobject);
-  return response;
+  return ("not implemented");
 }
 
 function changePseudonym(userId, newNickname) {
-  const responseobject = User.findOneAndUpdate(
-    { userId: userId },
-    { $set: { spitzname: newNickname } },
-    { new: true },
-    function (err, user) {
-      response = false;
-      if (err) {
-        return handleError(err);
-      }
-      console.log(
-        "Entry found: %s %s %s",
-        user.userId,
-        user.number,
-        user.pseudonym
-      );
-      response = true;
-    }
-  );
-  console.log(typeof responseobject);
-  return response;
+  return("not implemented");
 }
 
 module.exports = {
@@ -409,4 +516,9 @@ module.exports = {
   searchForInitiatedExchanges,
   searchForAnsweredExchanges,
   deleteKeyExchange,
+  addNewSMSRegistration,
+  findUserByNumberInMessagebird,
+  updateUserVerificationStatus,
+  findExistingRegistration,
+  deleteUserDataFromDB,
 };

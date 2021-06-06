@@ -1,10 +1,10 @@
+require("dotenv").config();
 const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 
-
-async function sendVerificationSMS(phonenumber) {
+function sendVerificationSMS(phonenumber) {
     try {
         var params = {
-            originator: "Rossi Chat App",
+            originator: "Rossi Chat",
             type: "sms",
             timeout: "60"
         };
@@ -22,14 +22,16 @@ async function sendVerificationSMS(phonenumber) {
     }
 };
 
-async function verifyMessagebirdToken(id, token) {
+
+
+function verifyMessagebirdToken(id, token) {
     try {
         return new Promise((resolve, reject) => {
             messagebird.verify.verify(id, token, function (err, response) {
                 if (err) {
                     reject(err)
                 }
-                resolve(response.status);
+                resolve(response);
             });
         });
     } catch (error) {

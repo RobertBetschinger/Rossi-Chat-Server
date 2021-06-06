@@ -9,10 +9,12 @@ const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
 const mongodb = require("./connect");
-const messagebird = require("messagebird")(process.env.MSGBIRD_TEST_ACCESS_KEY);
+const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 const secret = process.env.SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
-const msgbird = require("./verify")
+const jwt = require("jsonwebtoken");
+const msgbird = require("./verify");
+const { mongo } = require("mongoose");
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
 mongodb.connect().then(
@@ -28,6 +30,19 @@ mongodb.connect().then(
   }
 );
 
+
+
+//----- rate limiting -----//
+const { RateLimiterMemory } = require("rate-limiter-flexible")
+//TODO make the limit more adaptable/flexible/add burst limiter
+const rateLimiter = new RateLimiterMemory(
+  {
+    points: 100, // 100 points
+    duration: 1, // per 1 seconds
+  });
+
+
+
 //ToDo: Secret Variable erstellen und evtl. nachsehen wie man JWT verschlüsseln kann
 //Timo: Einbau von JWT erzeugung wenn SMS erfolgreich war. Ich bau das mal die tage. Dann musst du es nur noch einfügen an der richtigen Stelle.
 
@@ -36,7 +51,7 @@ mongodb.connect().then(
 io.use(
   jwtAuth.authenticate(
     {
-      secret: "secret", // required, used to verify the token's signature
+      secret: process.env.ACCESS_TOKEN_SECRET, // required, used to verify the token's signature
       algorithm: "HS256", // optional, default to be HS256
       succeedWithoutToken: true,
     },
@@ -77,6 +92,7 @@ io.on("connection", function (socket) {
       "User ist noch nicht authentifiziert. Keine Berechtigungen. Wird nicht In Online DB eingetragen."
     );
   }
+
   //Disconnect
   socket.on("disconnect", function () {
     console.log("a user disconnected");
@@ -89,36 +105,86 @@ io.on("connection", function (socket) {
 
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.js request-registration");
-    answer(true);
     try {
+      //Create IDs
       var privateid = PrivateID();
       var forid = ID();
+      //Create Userobject with default verification status: false
       const preUserObject = {
         privateuserId: privateid,
         foreignId: forid,
         number: object.phonenumber,
+        verified: false
       };
-      //Sms wird losgehauen
-      var birdId = await msgbird.sendVerificationSMS(preUserObject.number);
-      console.log("Messagebird SMS sent and ID creation successfull: ")
-      await mongodb.addNewUser(preUserObject);
-      answer(preUserObject);
+      if(object.skipVerification){
+        //shortcut to avoid sending messagebird sms
+        console.log("Skipping verification")
+        preUserObject.verified = true;
+        var newUserObject = await mongodb.addNewUser(preUserObject);
+        if(newUserObject.verified){
+          console.log("debug: added user object has verified status")
+        }
+        var jwtuser = {
+            sub: newUserObject.privateuserId,
+            foreignId: newUserObject.foreignId,
+            number: newUserObject.number
+        };
+        accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
+        answer(jwtuser, accessToken)
+      } else {
+        //Check for existing registration of phonenumber in mongodb
+        var existance = await mongodb.findExistingRegistration(preUserObject.number);
+        console.log(existance);
+        //Request distribution of SMS token
+        var bird = await msgbird.sendVerificationSMS(String(preUserObject.number)).then(console.log("Messagebird SMS sent and ID creation successfull"));
+        console.log("Next: Adding Messagebird Id and Number to DB");
+        //Add new registration to db
+        var result = await mongodb.addNewSMSRegistration(bird.id, preUserObject.number);
+        //Add new User to db
+        var newUserObject = await mongodb.addNewUser(preUserObject);
+        answer(true);
+      }
     } catch (error) {
       console.error(error);
-      answer(false);
+      answer(error);
     }
   });
 
   //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an
-
-  // Vor oder Nach der Erstellung des User Objects in der DB?
   socket.on("verify-sms-token", async (object, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.js verify sms token");
+    object = {
+      phonenumber: object.phonenumber,
+      token: object.token
+    }
     try {
-      var result = await msgbird.verifyMessagebirdToken(birdId, object);
+      var birdobject = await mongodb.findUserByNumberInMessagebird(object.phonenumber).then("Usernumber found in messagebird db collection");
+      var result = await msgbird.verifyMessagebirdToken(birdobject.birdId, object.token).then("Messagebird token verified");
       if (result.status === "verified") {
-        answer = result.status;
+        var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
+        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject._id).then(console.log("Userobject verification updated in Database"));
+        var jwtuser = {
+            sub: newUserObject.privateuserId,
+            foreignId: newUserObject.foreignId,
+            number: newUserObject.number
+        };
+        accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
+        answer(jwtuser, accessToken);
       }
     } catch (error) {
       console.error(error);
@@ -126,8 +192,34 @@ io.on("connection", function (socket) {
     }
   });
 
+  socket.on("alabama", async (object, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
+    console.log("Deletion of user data initiated");
+    try {
+      var deletionStatus = await mongodb.deleteUserDataFromDB(object.privateId,object.phonenumber)
+      answer("Deletion successfull: " + deletionStatus)
+    } catch (error) {
+      console.error(error);
+      answer("Deletion failed");
+    }
+  });
+
+
   //Privatchat eröffnen
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
@@ -148,6 +240,13 @@ io.on("connection", function (socket) {
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js send-chat-message-privat");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -175,6 +274,7 @@ io.on("connection", function (socket) {
           timestamp: message.timestamp,
           messageContent: message.messageContent,
           receiverId: message.foreignId,
+          contentType: message.contentType,
           forwardKey: message.forwardKey,
         };
         await mongodb.addMessage(messageObject);
@@ -191,6 +291,13 @@ io.on("connection", function (socket) {
   //Abfragen ob Nachrichten da sind.
   ///Sicherheitslücke
   socket.on("got-new-messages?", async function (data, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -214,6 +321,13 @@ io.on("connection", function (socket) {
   }});
 
   socket.on("message-received", async (messageId, senderID, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
    console.log("Server.js messsage-received");
     //Nachricht abspeichern das sie empfangen wurden.
     if (!socket.request.user.logged_in) {
@@ -255,6 +369,13 @@ io.on("connection", function (socket) {
 
   //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
   socket.on("who-received-my-messages", async function (data, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -282,6 +403,13 @@ io.on("connection", function (socket) {
   //Funktion um Messages zu löschen
   //Nachrichten sind engültig zugestellt und Sender hat dies auch bestätigt bekommen. Nachrichten aus DB löschen
   socket.on("conclude-messages-exchange", async (my_id, messageIds, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.js conclude-messages-exchange");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -301,6 +429,13 @@ io.on("connection", function (socket) {
   //Instant einrichten
   //Key Exchange Funktionen:
   socket.on("initiate-key-exchange", async (data, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js initiate-key-exchange");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -339,6 +474,13 @@ io.on("connection", function (socket) {
    }});
 
   socket.on("online-key-response", async function (data, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("Server.Js online-key-response");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -397,6 +539,13 @@ io.on("connection", function (socket) {
   }});
 
   socket.on("check-for-key-requests", async function (data, answer) {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     console.log("server.js check-for-key-requests");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -461,6 +610,13 @@ io.on("connection", function (socket) {
   }});
 
   socket.on("initiated-key-received", async (data, answer) => {
+    try{
+      await rateLimiter.consume(socket.handshake.address)
+    } catch(rejRes){
+      console.log("Too many requests from address " + socket.handshake.address + "; request rejected.")
+      answer(429, "Request blocked: too many requests.")
+      return
+    }
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
@@ -490,9 +646,9 @@ io.on("connection", function (socket) {
         if (numberchanged === true) {
           answer(
             "Phonenumber of user" +
-              userObject.userId +
-              "has been changed to" +
-              newnumber
+            userObject.userId +
+            "has been changed to" +
+            newnumber
           );
         }
       } catch {
@@ -514,9 +670,9 @@ io.on("connection", function (socket) {
         if (nicknamechanged === true) {
           answer(
             "Phonenumber of user" +
-              userObject.userId +
-              "has been changed to" +
-              newNickname
+            userObject.userId +
+            "has been changed to" +
+            newNickname
           );
         }
       } catch {
