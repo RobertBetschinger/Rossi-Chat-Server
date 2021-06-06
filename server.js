@@ -328,7 +328,6 @@ io.on("connection", function (socket) {
             senderPublicKey: data.senderPublicKey,
             timestamp: data.timestamp,
             status: "initiated",
-            //status2 = answered
           };
           await mongodb.saveInitiateKeyExchange(keyExchangeObject);
           console.log("Key ExchangeObject Added to DB");
@@ -350,6 +349,7 @@ io.on("connection", function (socket) {
           //Sende object zurück
           var socketID = getSocketId(data.requesterForeignId);
           finalKeyObject = {
+            //Damit der Empfänger zuordnen kann.
             responderId: socket.request.user.foreignId,
             keyResponse: data.responderPublicKey,
           };
@@ -360,21 +360,34 @@ io.on("connection", function (socket) {
               finalKeyObject
             );
         } else {
-          console.log("Nicht Online Muss abgespeichert werden");
+          console.log("Nicht Online Muss abgespeichert oder überschrieben werden!");
           var permanentIdOfRequester = await mongodb.findUserPermanentId(
             data.requesterForeignId
           );
-          const keyExchangeObject = {
-            senderPrivateId: permanentIdOfRequester,
-            senderForeignId: data.requesterForeignId,
-            receiverForeignId: socket.request.user.foreignId,
-            senderPublicKey: data.responderPublicKey,
-            //timestamp: data.timestamp,    
-            status: "answered",
-          };
-
-          await mongodb.saveInitiateKeyExchange(keyExchangeObject);
-          console.log("Key ExchangeObject Added to DB");
+          var initiatedObject = await mongodb.searchForInitiatedSingleExchange(permanentIdOfRequester,data.requesterForeignId)
+          //Wenn es nicht existent ist muss es erzeugt werden.
+          if(initiatedObject === undefined){
+            const keyExchangeObject = {
+              senderPrivateId: permanentIdOfRequester,
+              senderForeignId: data.requesterForeignId,
+              receiverForeignId: socket.request.user.foreignId,
+              senderPublicKey: data.responderPublicKey,
+              timestamp: data.timestamp,    
+              status: "answered",
+            };
+  
+            await mongodb.saveInitiateKeyExchange(keyExchangeObject);
+            console.log("Key ExchangeObject Added to DB");
+          }
+          else{
+           var OverwriteStatus = await mongodb.overWriteSingleExchangeObject(permanentIdOfRequester,data.receiverForeignId,data.responderPublicKey)
+            if(OverwriteStatus === undefined){
+              answer(false)
+            } else{
+              answer(true)
+            }
+          }
+          
           // answer(true);
         }
       }  catch (error) {

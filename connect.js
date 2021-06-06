@@ -272,6 +272,41 @@ async function searchForInitiatedExchanges(foreignId, privateId) {
   }
 }
 
+async function searchForInitiatedSingleExchange(permanentID, foreignID) {
+  console.log("Connect.js searchForRequestedSingleExhange to overwrite ");
+  try {
+    console.log("Mit dieser Foreign id : " + foreignID);
+    exchangeObject = await KeyExchange.find(
+      { senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated" },
+      function (err, message) {
+        if (err) return handleError(err);
+      }
+    );
+    return exchangeObject;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+}
+
+async function overWriteSingleExchangeObject(permanentID, foreignID,answeredKey ) {
+  console.log("Connect.js searchForRequestedSingleExhange and overwrite itoverwrite ");
+  try {
+    console.log("Mit dieser Foreign id : " + foreignID);
+    var query = {senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated"}
+    exchangeObject = await KeyExchange.findOneAndUpdate(
+      {query,$set: { status: "answered",senderPublicKey: answeredKey}}, { new: true },
+      function (err, message) {
+        if (err) return handleError(err);
+      }
+    );
+    return exchangeObject;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+}
+
 async function searchForAnsweredExchanges(privateId, foreignId) {
   console.log("Connect.js seachForAnsweredExchanges ");
   try {
@@ -369,6 +404,8 @@ module.exports = {
   changePhonenumber,
   changePseudonym,
   saveInitiateKeyExchange,
+  overWriteSingleExchangeObject,
+  searchForInitiatedSingleExchange,
   searchForInitiatedExchanges,
   searchForAnsweredExchanges,
   deleteKeyExchange,
