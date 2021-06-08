@@ -309,7 +309,8 @@ async function findMessagesForUser(recieverForeignID) {
       "messageContent": message.messageContent,
       "timestamp": message.timestamp,
       "forwardKey": message.forwardKey,
-      "contentType": message.contentType
+      "contentType": message.contentType,
+      "chatId": message.chatId
     }))
     return messagesencoded
   } catch (error) {
@@ -434,13 +435,13 @@ async function searchForInitiatedSingleExchange(permanentID, foreignID) {
   }
 }
 
-async function overWriteSingleExchangeObject(permanentID, foreignID,answeredKey ) {
+async function overWriteSingleExchangeObject(permanentID, foreignID, answeredKey, cId) {
   console.log("Connect.js searchForRequestedSingleExhange and overwrite itoverwrite ");
   try {
     console.log("Mit dieser Foreign id : " + foreignID);
     var query = {senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated"}
     exchangeObject = await KeyExchange.findOneAndUpdate(
-      {query,$set: { status: "answered",senderPublicKey: answeredKey}}, { new: true },
+      {query,$set: { status: "answered",senderPublicKey: answeredKey, chatId: cId}}, { new: true },
       function (err, message) {
         if (err) return handleError(err);
       }

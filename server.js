@@ -10,7 +10,7 @@ const router = require("./router");
 const PORT = process.env.PORT || 5000;
 const mongodb = require("./connect");
 const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
-const secret = process.env.SECRET || "secret";
+const secret = process.env.ACCESS_TOKEN_SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
 const jwt = require("jsonwebtoken");
 const msgbird = require("./verify");
@@ -313,6 +313,7 @@ io.on("connection", function (socket) {
                 receiverId: messages[i].foreignId,
                 contentType: messages[i].contentType,
                 forwardKey: messages[i].forwardKey,
+                chatId: messages[i].chatId,
               };
               await mongodb.addMessage(messageObject);
               console.log("Message Added to DB");
@@ -521,6 +522,8 @@ io.on("connection", function (socket) {
             var onlineKeyExchangeObject = {
               requesterForeignId: data[i].senderForeignId,
               requesterPublicKey: data[i].senderPublicKey,
+              chatId: data[i].chatId,
+              groupName: data[i].groupName,
             };
             socket.broadcast
               .to(socketId)
@@ -532,6 +535,8 @@ io.on("connection", function (socket) {
               receiverForeignId: data[i].receiverForeignId,
               senderPublicKey: data[i].senderPublicKey,
               timestamp: data[i].timestamp,
+              chatId: data[i].chatId,
+              groupName: data[i].groupName,
               status: "initiated",
               //status2 = answered
             };
@@ -571,6 +576,7 @@ io.on("connection", function (socket) {
             //Damit der Empfänger zuordnen kann.
             responderId: socket.request.user.foreignId,
             keyResponse: data[i].responderPublicKey,
+            chatId: data[i].chatId,
           };
           socket.broadcast
             .to(socketID)
@@ -594,6 +600,7 @@ io.on("connection", function (socket) {
               receiverForeignId: socket.request.user.foreignId,
               senderPublicKey: data[i].responderPublicKey,
               timestamp: data[i].timestamp,
+              chatId: data[i].chatId,
               status: "answered",
             };
 
@@ -603,7 +610,8 @@ io.on("connection", function (socket) {
             var OverwriteStatus = await mongodb.overWriteSingleExchangeObject(
               permanentIdOfRequester,
               data[i].receiverForeignId,
-              data[i].responderPublicKey
+              data[i].responderPublicKey,
+              data[i].chatId
             );
             if (OverwriteStatus === undefined) {
               //answer(false);
