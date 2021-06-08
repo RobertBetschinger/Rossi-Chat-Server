@@ -400,7 +400,7 @@ io.on("connection", function (socket) {
         } else {
           const messageObject = {
             messageId: messageId,
-            senderId: senderId,
+            senderId: senderID,
             status: "ClientReceived",
           };
           var statusOverwriteMessage = await mongodb.replaceMessage(
