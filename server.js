@@ -392,7 +392,7 @@ io.on("connection", function (socket) {
       try {
         if (isOnline(senderID)) {
           console.log("The Sender of the message is online");
-          var receiverSocketId = getSocketId(messageId);
+          var receiverSocketId = getSocketId(senderID);
           socket.broadcast
             .to(receiverSocketId)
             .emit("message-transmitted", messageId);
