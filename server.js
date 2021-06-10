@@ -524,6 +524,7 @@ io.on("connection", function (socket) {
               requesterPublicKey: data[i].senderPublicKey,
               chatId: data[i].chatId,
               groupName: data[i].groupName,
+              timestamp: data[i].timestamp,
             };
             socket.broadcast
               .to(socketId)
