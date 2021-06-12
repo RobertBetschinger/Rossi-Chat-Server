@@ -13,6 +13,8 @@ const msgSchema = new mongoose.Schema(
     status: String,
     contentType: Number,
     forwardkey: String,
+    userList: String,
+    chatId: String,
   },
   { versionKey: false }
 );
