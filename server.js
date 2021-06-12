@@ -74,7 +74,7 @@ io.use(
 );
 
 io.on("connection", function (socket) {
-  console.log("Authentication passed! This User connected");
+  console.log("Authentication is complete! This User connected");
   console.log(socket.request.user);
   if (socket.request.user.logged_in) {
     usersCurrentlyOnline.push({
@@ -87,6 +87,12 @@ io.on("connection", function (socket) {
       "User ist noch nicht authentifiziert. Keine Berechtigungen. Wird nicht In Online DB eingetragen."
     );
   }
+
+  
+
+  socket.on("test",(arg)=>{
+    console.log(arg)
+  })
 
   //Disconnect
   socket.on("disconnect", function () {
