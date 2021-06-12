@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
     },
     number: {
         type: String,
+        unique:true,
         required: true,
     },
     spitzname: {

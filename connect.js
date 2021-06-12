@@ -51,6 +51,7 @@ function addNewUser(userObject) {
   } catch (error) {
     console.log(error);
     console.log("addNewUser failed");
+    return error
   }
 }
 
