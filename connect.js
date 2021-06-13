@@ -44,7 +44,7 @@ function addNewUser(userObject) {
           reject(err);
         }
         else {
-          resolve(doc);
+          resolve(doc.toObject());
         }
       })
     });
