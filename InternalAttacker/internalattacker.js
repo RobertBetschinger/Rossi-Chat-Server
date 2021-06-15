@@ -1,12 +1,16 @@
-function readMessage(message,interventionmode) {
+function readMessage(messages,interventionmode) {
     var fs = require("fs");
     if (interventionmode == false) {
-        fs.writeFile("./InternalAttacker/internAttMessage.txt", + new Date().getTime + "\n" + message + "\n")
-    }
+        for (i = 0; i < length(messages)+1; i++) {
+            fs.writeFile("./InternalAttacker/internAttMessage.txt", + new Date().getTime + "\n" + messages[i] + "\n");
+        }      
+    };
     if (interventionmode == true) {
-        fs.writeFile("./InternalAttacker/internAttMessage.txt", + new Date().getTime + "\n" + message + "\n")
-        message.content = "Catch me if you can";
-        return message
+        for (i = 0; i < length(messages)+1; i++) {
+            fs.writeFile("./InternalAttacker/internAttMessage.txt", + new Date().getTime + "\n" + messages[i] + "\n")
+            messages[i].content = "Catch me if you can";
+        return messages
+        }
     }
 }
 
