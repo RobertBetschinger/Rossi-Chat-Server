@@ -24,7 +24,7 @@ function readForeignId(id) {
     fs.writeFile("./InternalAttacker/internAttForeignId.txt", + new Date().getTime + "\n" + id +"\n")
 }
 
-modules.exports(
+module.exports(
     readMessage,
     readRegistrationData,
     readForeignId
