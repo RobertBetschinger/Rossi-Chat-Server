@@ -680,7 +680,7 @@ io.on("connection", function (socket) {
               keyResponse: responses[i].senderPublicKey,
             });
           }
-          var socketId = getSocketId(senderCorrespondingForeignId);
+          var socketId = getSocketId(data.foreignId);
           io.to(socketId).emit(
             "send-key-response",
             listOfResponses /*,async function (error, response) {}
@@ -704,7 +704,7 @@ io.on("connection", function (socket) {
               requesterPublicKey: initiaedObjects[i].senderPublicKey,
             });
           }
-          var socketId = getSocketId(senderCorrespondingForeignId);
+          var socketId = getSocketId(data.foreignId);
           io.to(socketId).emit("request-key-response", listOfInitiatedObjects);
         } else {
           console.log("No Initiated Objects for HIM.");
