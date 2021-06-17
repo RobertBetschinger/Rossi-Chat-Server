@@ -302,7 +302,7 @@ async function findMessagesForUser(recieverForeignID) {
     var messages = [];
     var messagesencoded = [];
     messages = await Message.find(
-      { receiverId: recieverForeignID }).lean();
+      { receiverId: recieverForeignID }).lean().sort('timestamp');
     messages.forEach(message => messagesencoded.push({
       "messageId": message.messageId,
       "senderId": message.senderId,
