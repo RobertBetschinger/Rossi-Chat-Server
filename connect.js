@@ -55,6 +55,22 @@ function addNewUser(userObject) {
   }
 }
 
+async function addNewUser(userObject){
+  console.log("Connect.js addNewUser");
+  try {
+    var user = new User(userObject);
+    user.save((err, doc) => {
+      if (!err) {
+        console.log("User added to db");
+        return true;
+      }
+    });
+  } catch (error) {
+    
+  }
+}
+
+
 
 async function identifyUser(privId, forId, number) {
   console.log("Connect.js Identify User");

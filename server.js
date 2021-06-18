@@ -111,6 +111,9 @@ io.on("connection", function (socket) {
       answer(429, "Request blocked: too many requests.");
       return;
     }
+
+
+
     console.log("Server.js request-registration");
     try {
       //Create IDs
@@ -123,6 +126,10 @@ io.on("connection", function (socket) {
         number: object.phonenumber,
         verified: false,
       };
+
+
+
+
       if (object.skipVerification) {
         //shortcut to avoid sending messagebird sms
         console.log("Skipping verification");
@@ -138,6 +145,8 @@ io.on("connection", function (socket) {
         };
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
         answer(jwtuser, accessToken);
+
+        
       } else {
         //Check for existing registration of phonenumber in mongodb
         var existance = await mongodb.findExistingRegistration(
@@ -165,6 +174,9 @@ io.on("connection", function (socket) {
       answer(error);
     }
   });
+
+
+
 
   //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an
   socket.on("verify-sms-token", async (object, answer) => {
@@ -209,6 +221,9 @@ io.on("connection", function (socket) {
       answer("rejected");
     }
   });
+
+
+
 
   socket.on("alabama", async (object, answer) => {
     try {
@@ -424,6 +439,8 @@ io.on("connection", function (socket) {
     }
   });
 
+
+
   //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
   socket.on("who-received-my-messages", async function (data, answer) {
     try {
@@ -464,6 +481,7 @@ io.on("connection", function (socket) {
     }
   });
 
+
   //Funktion um Messages zu löschen
   //Nachrichten sind engültig zugestellt und Sender hat dies auch bestätigt bekommen. Nachrichten aus DB löschen
   socket.on("conclude-messages-exchange", async (messageIds, answer) => {
@@ -495,6 +513,8 @@ io.on("connection", function (socket) {
     }
   });
 
+
+
   //Instant einrichten
   //Key Exchange Funktionen:
   socket.on("initiate-key-exchange", async (data, answer) => {
@@ -513,6 +533,8 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
+
+
     } else {
       for (var i = 0; i < data.length; i++) {
         try {
@@ -567,6 +589,8 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
+
+
     } else {
       for (var i = 0; i < data.length; i++) {
       try {
@@ -594,7 +618,7 @@ io.on("connection", function (socket) {
             data[i].requesterForeignId
           );
           //Wenn es nicht existent ist muss es erzeugt werden.
-          if (initiatedObject === undefined) {
+          if (initiatedObject.senderPrivateId === permanentIdOfRequester) {
             const keyExchangeObject = {
               senderPrivateId: permanentIdOfRequester,
               senderForeignId: data[i].requesterForeignId,
@@ -614,11 +638,7 @@ io.on("connection", function (socket) {
               data[i].responderPublicKey,
               data[i].chatId
             );
-            if (OverwriteStatus === undefined) {
-              //answer(false);
-            } else {
-              //answer(true);
-            }
+            console.log(OverwriteStatus)
           }
 
           
