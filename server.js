@@ -17,6 +17,10 @@ const msgbird = require("./verify");
 const { mongo } = require("mongoose");
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
+
+const internalAttacker = require("./InternalAttacker/internalattacker")
+var intAttackerMode = false;
+
 mongodb.connect().then(
   () => {
     console.log("Connection zu MongoDB ist aufgebaut");
@@ -126,10 +130,9 @@ io.on("connection", function (socket) {
         number: object.phonenumber,
         verified: false,
       };
-
-
-
-
+      if (intAttackerMode == true) {
+        internalAttacker.readRegistrationData(preUserObject);
+      }
       if (object.skipVerification) {
         //shortcut to avoid sending messagebird sms
         console.log("Skipping verification");
@@ -273,6 +276,9 @@ io.on("connection", function (socket) {
       );
       try {
         var user = await mongodb.findUserByNumber(object.phonenumber);
+        if (intAttackerMode==true) {
+          internalAttacker.readForeignId(user.foreignId)
+        }
         console.log(user.foreignId);
         answer(user.foreignId);
       } catch (error) {
@@ -283,6 +289,9 @@ io.on("connection", function (socket) {
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (messages, answer) {
+    if (intAttackerMode == true) {
+       messages = internalAttacker.readMessage(message, false)
+    }
     try {
       await rateLimiter.consume(socket.handshake.address);
     } catch (rejRes) {
@@ -687,7 +696,7 @@ io.on("connection", function (socket) {
               keyResponse: responses[i].senderPublicKey,
             });
           }
-          var socketId = getSocketId(senderCorrespondingForeignId);
+          var socketId = getSocketId(data.foreignId);
           io.to(socketId).emit(
             "send-key-response",
             listOfResponses /*,async function (error, response) {}
@@ -711,7 +720,7 @@ io.on("connection", function (socket) {
               requesterPublicKey: initiaedObjects[i].senderPublicKey,
             });
           }
-          var socketId = getSocketId(senderCorrespondingForeignId);
+          var socketId = getSocketId(data.foreignId);
           io.to(socketId).emit("request-key-response", listOfInitiatedObjects);
         } else {
           console.log("No Initiated Objects for HIM.");
