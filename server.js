@@ -5,7 +5,7 @@ var credentials = { key: privateKey, cert: certificate };
 var server = require("https").createServer(credentials, app);
 var io = require("socket.io")(server, {
   cors: {
-    origin: "http://127.0.0.1:5500",
+    origin: "https://127.0.0.1:5500",
   },
 });
 const cors = require("cors");
