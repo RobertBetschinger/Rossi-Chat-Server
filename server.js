@@ -9,7 +9,6 @@ const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
 const mongodb = require("./connect");
-const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 const secret = process.env.ACCESS_TOKEN_SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
 const jwt = require("jsonwebtoken");
