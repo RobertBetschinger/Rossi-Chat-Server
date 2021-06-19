@@ -1,5 +1,8 @@
 var app = require("express")();
-var server = require("http").createServer(app);
+var privateKey = process.env.SSL_PRIVATE_KEY;
+var certificate = process.env.SSL_CERT
+var credentials = { key: privateKey, cert: certificate };
+var server = require("https").createServer(credentials, app);
 var io = require("socket.io")(server, {
   cors: {
     origin: "http://127.0.0.1:5500",
@@ -109,8 +112,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -149,7 +152,7 @@ io.on("connection", function (socket) {
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
         answer(jwtuser, accessToken);
 
-        
+
       } else {
         //Check for existing registration of phonenumber in mongodb
         var existance = await mongodb.findExistingRegistration(
@@ -188,8 +191,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -234,8 +237,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -260,8 +263,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -276,7 +279,7 @@ io.on("connection", function (socket) {
       );
       try {
         var user = await mongodb.findUserByNumber(object.phonenumber);
-        if (intAttackerMode==true) {
+        if (intAttackerMode == true) {
           internalAttacker.readForeignId(user.foreignId)
         }
         console.log(user.foreignId);
@@ -290,15 +293,15 @@ io.on("connection", function (socket) {
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (messages, answer) {
     if (intAttackerMode == true) {
-       messages = internalAttacker.readMessage(message, false)
+      messages = internalAttacker.readMessage(message, false)
     }
     try {
       await rateLimiter.consume(socket.handshake.address);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -312,7 +315,7 @@ io.on("connection", function (socket) {
         for (var i = 0; i < messages.length; i++) {
           console.log(
             "Das ist die Wahrheit darüber ob der Chat Partner Online ist " +
-              isOnline(messages[i].foreignId)
+            isOnline(messages[i].foreignId)
           );
           if (isOnline(messages[i].foreignId)) {
             console.log("the current Chat partner ist online");
@@ -364,8 +367,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -401,8 +404,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -457,8 +460,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -499,8 +502,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -532,8 +535,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -588,8 +591,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -602,62 +605,62 @@ io.on("connection", function (socket) {
 
     } else {
       for (var i = 0; i < data.length; i++) {
-      try {
-        if (isOnline(data[i].requesterForeignId)) {
-          //Sende object zurück
-          var socketID = getSocketId(data[i].requesterForeignId);
-          finalKeyObject = {
-            //Damit der Empfänger zuordnen kann.
-            responderId: socket.request.user.foreignId,
-            keyResponse: data[i].responderPublicKey,
-            chatId: data[i].chatId,
-          };
-          socket.broadcast
-            .to(socketID)
-            .emit("send-key-response", finalKeyObject);
-        } else {
-          console.log(
-            "Nicht Online Muss abgespeichert oder überschrieben werden!"
-          );
-          var permanentIdOfRequester = await mongodb.findUserPermanentId(
-            data[i].requesterForeignId
-          );
-          var initiatedObject = await mongodb.searchForInitiatedSingleExchange(
-            permanentIdOfRequester,
-            data[i].requesterForeignId
-          );
-          //Wenn es nicht existent ist muss es erzeugt werden.
-          if (initiatedObject.senderPrivateId === permanentIdOfRequester) {
-            const keyExchangeObject = {
-              senderPrivateId: permanentIdOfRequester,
-              senderForeignId: data[i].requesterForeignId,
-              receiverForeignId: socket.request.user.foreignId,
-              senderPublicKey: data[i].responderPublicKey,
-              timestamp: data[i].timestamp,
+        try {
+          if (isOnline(data[i].requesterForeignId)) {
+            //Sende object zurück
+            var socketID = getSocketId(data[i].requesterForeignId);
+            finalKeyObject = {
+              //Damit der Empfänger zuordnen kann.
+              responderId: socket.request.user.foreignId,
+              keyResponse: data[i].responderPublicKey,
               chatId: data[i].chatId,
-              status: "answered",
             };
-
-            await mongodb.saveInitiateKeyExchange(keyExchangeObject);
-            console.log("Key ExchangeObject Added to DB");
+            socket.broadcast
+              .to(socketID)
+              .emit("send-key-response", finalKeyObject);
           } else {
-            var OverwriteStatus = await mongodb.overWriteSingleExchangeObject(
-              permanentIdOfRequester,
-              data[i].receiverForeignId,
-              data[i].responderPublicKey,
-              data[i].chatId
+            console.log(
+              "Nicht Online Muss abgespeichert oder überschrieben werden!"
             );
-            console.log(OverwriteStatus)
-          }
+            var permanentIdOfRequester = await mongodb.findUserPermanentId(
+              data[i].requesterForeignId
+            );
+            var initiatedObject = await mongodb.searchForInitiatedSingleExchange(
+              permanentIdOfRequester,
+              data[i].requesterForeignId
+            );
+            //Wenn es nicht existent ist muss es erzeugt werden.
+            if (initiatedObject.senderPrivateId === permanentIdOfRequester) {
+              const keyExchangeObject = {
+                senderPrivateId: permanentIdOfRequester,
+                senderForeignId: data[i].requesterForeignId,
+                receiverForeignId: socket.request.user.foreignId,
+                senderPublicKey: data[i].responderPublicKey,
+                timestamp: data[i].timestamp,
+                chatId: data[i].chatId,
+                status: "answered",
+              };
 
-          
+              await mongodb.saveInitiateKeyExchange(keyExchangeObject);
+              console.log("Key ExchangeObject Added to DB");
+            } else {
+              var OverwriteStatus = await mongodb.overWriteSingleExchangeObject(
+                permanentIdOfRequester,
+                data[i].receiverForeignId,
+                data[i].responderPublicKey,
+                data[i].chatId
+              );
+              console.log(OverwriteStatus)
+            }
+
+
+          }
+        } catch (error) {
+          console.log(error);
+          answer(false)
         }
-      } catch (error) {
-        console.log(error);
-        answer(false)
+        answer(true)
       }
-      answer(true)
-    }
     }
   });
 
@@ -667,8 +670,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -738,8 +741,8 @@ io.on("connection", function (socket) {
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
-          socket.handshake.address +
-          "; request rejected."
+        socket.handshake.address +
+        "; request rejected."
       );
       answer(429, "Request blocked: too many requests.");
       return;
@@ -774,9 +777,9 @@ io.on("connection", function (socket) {
         if (numberchanged === true) {
           answer(
             "Phonenumber of user" +
-              userObject.userId +
-              "has been changed to" +
-              newnumber
+            userObject.userId +
+            "has been changed to" +
+            newnumber
           );
         }
       } catch {
@@ -798,9 +801,9 @@ io.on("connection", function (socket) {
         if (nicknamechanged === true) {
           answer(
             "Phonenumber of user" +
-              userObject.userId +
-              "has been changed to" +
-              newNickname
+            userObject.userId +
+            "has been changed to" +
+            newNickname
           );
         }
       } catch {
