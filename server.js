@@ -1,8 +1,8 @@
 var certificate = process.env.SSL_CERT
 var privateKey = process.env.SSL_PRIVATE_KEY
 var credentials = { key: privateKey, cert: certificate };
-var app = require("express")(credentials);
-var server = require("https").createServer(app);
+var app = require("express")();
+var server = require("https").createServer(credentials, app);
 var io = require("socket.io")(server, {
   cors: {
     origin: "http://127.0.0.1:5500",
