@@ -1,4 +1,5 @@
 var app = require("express")();
+const enforce = require('express-sslify');
 var privateKey = process.env.SSL_PRIVATE_KEY;
 var certificate = process.env.SSL_CERT
 var credentials = { key: privateKey, cert: certificate };
@@ -860,6 +861,7 @@ var PrivateID = function () {
 //This Part has to be at the bottom of the Code
 
 function createServer() {
+  app.use(enforce.HTTPS({ trustProtoHeader: true }));
   app.use(router);
   app.use(cors());
   server.listen(PORT, () => {

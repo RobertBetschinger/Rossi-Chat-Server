@@ -18,7 +18,7 @@ function connect() {
     "mongodb+srv://rossi-chat-server:" +
     process.env.MONGO_ATLAS_CREDS +
     "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
-    { useNewUrlParser: true, useUnifiedTopology: true }
+    { useNewUrlParser: true, useUnifiedTopology: true,useCreateIndexes:true }
 
   );
 }
