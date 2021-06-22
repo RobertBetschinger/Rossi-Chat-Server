@@ -435,20 +435,20 @@ async function searchForInitiatedExchanges(foreignId, privateId) {
   }
 }
 
-async function searchForInitiatedSingleExchange(permanentID, foreignID) {
+async function searchForInitiatedSingleExchange(permanentID, foreignID,ChatId) {
   console.log("Connect.js searchForRequestedSingleExhange to overwrite ");
   try {
     console.log("Mit dieser Foreign id : " + foreignID);
     exchangeObject = await KeyExchange.find(
-      { senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated" },
+      { senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated",chatId:ChatId },
       function (err, message) {
-        if (err) return handleError(err);
+        if (err) return false
       }
     );
     return exchangeObject;
   } catch (error) {
     console.log(error);
-    return undefined;
+    return false;
   }
 }
 
@@ -466,7 +466,7 @@ async function overWriteSingleExchangeObject(permanentID, foreignID, answeredKey
     return exchangeObject;
   } catch (error) {
     console.log(error);
-    return undefined;
+    return false;
   }
 }
 
@@ -485,7 +485,6 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
     );
     console.log(typeof answeredExchangeObjects);
     return answeredExchangeObjects;
-    //Das mit dem löschen muss noch eingebaut werden.
   } catch (error) {
     console.log(error);
     return false;
@@ -495,10 +494,12 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
 async function deleteKeyExchange(deleteThisKey) {
   console.log("Connect.js findMessagesForUser");
   try {
-    KeyExchange.deleteOne({ _id: deleteThisKey }),
+   deleteKey=  await KeyExchange.deleteOne({ _id: deleteThisKey }),
       function (err, message) {
         if (err) return handleError(err);
       };
+      console.log(deleteKey)
+      return deleteKey
   } catch (error) {
     console.log(error);
     console.log("deleteThisKey failed");

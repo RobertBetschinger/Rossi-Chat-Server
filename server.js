@@ -528,8 +528,10 @@ io.on("connection", function (socket) {
 
 
 
+
   //Instant einrichten
   //Key Exchange Funktionen:
+  //Key Exchange wird übertragen falls Online und in jedem Fall in der DB abgespeichert.
   socket.on("initiate-key-exchange", async (data, answer) => {
     try {
       await rateLimiter.consume(socket.handshake.address);
@@ -557,14 +559,17 @@ io.on("connection", function (socket) {
             var onlineKeyExchangeObject = {
               requesterForeignId: data[i].senderForeignId,
               requesterPublicKey: data[i].senderPublicKey,
+              receiverForeignId: data[i].receiverForeignId,
               chatId: data[i].chatId,
               groupName: data[i].groupName,
               timestamp: data[i].timestamp,
+              status: "initiated",
             };
             socket.broadcast
               .to(socketId)
               .emit("request-key-response", onlineKeyExchangeObject);
-          } else {
+          }  
+
             const keyExchangeObject = {
               senderPrivateId: data[i].senderPrivateId,
               senderForeignId: data[i].senderForeignId,
@@ -574,17 +579,20 @@ io.on("connection", function (socket) {
               chatId: data[i].chatId,
               groupName: data[i].groupName,
               status: "initiated",
-              //status2 = answered
-            };
+            }
+            
             await mongodb.saveInitiateKeyExchange(keyExchangeObject);
             console.log("Key ExchangeObject Added to DB");
-          }
+          
         } catch (error) {
           console.log(error);
         }
       }
     }
   });
+
+
+  //Antwort der Person die einen Key Exchange beantwortet.
 
   socket.on("online-key-response", async function (data, answer) {
     try {
@@ -604,14 +612,37 @@ io.on("connection", function (socket) {
       answer("Sie sind nicht berechtigt.");
 
 
+
     } else {
       for (var i = 0; i < data.length; i++) {
         try {
+          var permanentIdOfRequester = await mongodb.findUserPermanentId(
+            data[i].requesterForeignId
+          );
+          var initiatedObject = await mongodb.searchForInitiatedSingleExchange(
+            permanentIdOfRequester,
+            data[i].requesterForeignId,data[i].chatId
+          );
+          console.log("Dieses initated Object wurde gefunden "+ initiatedObject)
+          if(initiatedObject===false){
+            answer(false)
+            break
+          } 
+          else{
+            var OverwriteStatus = await mongodb.overWriteSingleExchangeObject(
+              permanentIdOfRequester,
+              data[i].receiverForeignId,
+              data[i].responderPublicKey,
+              data[i].chatId
+            );
+            console.log("Nachfolgend sollte das überschriebene Objekt stehen, also muss es auf jeden Fall answered sein.")
+            console.log("Das überschreiben hat geklappt? = "+ OverwriteStatus)
+          }
           if (isOnline(data[i].requesterForeignId)) {
             //Sende object zurück
             var socketID = getSocketId(data[i].requesterForeignId);
             finalKeyObject = {
-              //Damit der Empfänger zuordnen kann.
+              mongodDbObjectId:initiatedObject._id,
               responderId: socket.request.user.foreignId,
               keyResponse: data[i].responderPublicKey,
               chatId: data[i].chatId,
@@ -619,42 +650,6 @@ io.on("connection", function (socket) {
             socket.broadcast
               .to(socketID)
               .emit("send-key-response", finalKeyObject);
-          } else {
-            console.log(
-              "Nicht Online Muss abgespeichert oder überschrieben werden!"
-            );
-            var permanentIdOfRequester = await mongodb.findUserPermanentId(
-              data[i].requesterForeignId
-            );
-            var initiatedObject = await mongodb.searchForInitiatedSingleExchange(
-              permanentIdOfRequester,
-              data[i].requesterForeignId
-            );
-            //Wenn es nicht existent ist muss es erzeugt werden.
-            if (initiatedObject.senderPrivateId === permanentIdOfRequester) {
-              const keyExchangeObject = {
-                senderPrivateId: permanentIdOfRequester,
-                senderForeignId: data[i].requesterForeignId,
-                receiverForeignId: socket.request.user.foreignId,
-                senderPublicKey: data[i].responderPublicKey,
-                timestamp: data[i].timestamp,
-                chatId: data[i].chatId,
-                status: "answered",
-              };
-
-              await mongodb.saveInitiateKeyExchange(keyExchangeObject);
-              console.log("Key ExchangeObject Added to DB");
-            } else {
-              var OverwriteStatus = await mongodb.overWriteSingleExchangeObject(
-                permanentIdOfRequester,
-                data[i].receiverForeignId,
-                data[i].responderPublicKey,
-                data[i].chatId
-              );
-              console.log(OverwriteStatus)
-            }
-
-
           }
         } catch (error) {
           console.log(error);
@@ -751,12 +746,15 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else {
+    } 
+    
+    else {
       console.log("Server.js initiated-key-received");
       console.log(data);
       console.log(data.keyID);
       try {
-        await mongodb.deleteKeyExchange(data.keyId);
+       var status =  await mongodb.deleteKeyExchange(data.keyId);
+       console.log(status)
         answer(true);
       } catch (error) {
         console.log(error);
