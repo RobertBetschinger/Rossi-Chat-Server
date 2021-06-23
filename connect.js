@@ -55,7 +55,7 @@ function addNewUser(userObject) {
   }
 }
 
-/* async function addNewUser(userObject){
+async function addNewUser(userObject){
   console.log("Connect.js addNewUser");
   try {
     var user = new User(userObject);
@@ -68,7 +68,7 @@ function addNewUser(userObject) {
   } catch (error) {
     
   }
-} */
+}
 
 
 
