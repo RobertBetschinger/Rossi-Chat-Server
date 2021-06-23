@@ -1,9 +1,7 @@
 var app = require("express")();
+const mongodb = require("./connect");
 const enforce = require('express-sslify');
-var privateKey = process.env.SSL_PRIVATE_KEY;
-var certificate = process.env.SSL_CERT
-var credentials = { key: privateKey, cert: certificate };
-var server = require("https").createServer(credentials, app);
+var server = require("http").createServer(app);
 var io = require("socket.io")(server, {
   cors: {
     origin: "http://127.0.0.1:5500",
@@ -12,7 +10,6 @@ var io = require("socket.io")(server, {
 const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
-const mongodb = require("./connect");
 const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 const secret = process.env.ACCESS_TOKEN_SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
