@@ -56,7 +56,7 @@ function addNewUser(userObject) {
   }
 }
 
-async function addNewUser(userObject){
+/*async function addNewUser(userObject){
   console.log("Connect.js addNewUser");
   try {
     var user = new User(userObject);
@@ -69,7 +69,7 @@ async function addNewUser(userObject){
   } catch (error) {
     
   }
-}
+}*/
 
 
 
@@ -311,10 +311,10 @@ async function addMessage(messageobject) {
 }
 
 async function findMessagesForUser(recieverForeignID) {
-  console.log("Connect.js findMessagesForUser");
-  console.log(
-    "Das ist die ForeignId anhand der wir suchen" + recieverForeignID
-  );
+  //console.log("Connect.js findMessagesForUser");
+  //console.log(
+  //  "Das ist die ForeignId anhand der wir suchen" + recieverForeignID
+  //);
   try {
     var messages = [];
     var messagesencoded = [];

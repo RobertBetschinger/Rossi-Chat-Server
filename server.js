@@ -37,10 +37,9 @@ mongodb.connect().then(
 
 //----- rate limiting -----//
 const { RateLimiterMemory } = require("rate-limiter-flexible");
-//TODO make the limit more adaptable/flexible/add burst limiter
 const rateLimiter = new RateLimiterMemory({
-  points: 10000, // 100 points
-  duration: 1, // per 1 seconds
+  points: 100, // 100 points
+  duration: 3, // per 3 seconds
 });
 
 //ToDo: Secret Variable erstellen und evtl. nachsehen wie man JWT verschlüsseln kann
@@ -106,7 +105,8 @@ io.on("connection", function (socket) {
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      res = await rateLimiter.consume(socket.handshake.address, 25);
+      console.log("Client has " + res.remainingPoints + " points left.");
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -193,7 +193,7 @@ io.on("connection", function (socket) {
   //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an
   socket.on("verify-sms-token", async (object, answer) => {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 25);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -239,7 +239,7 @@ io.on("connection", function (socket) {
 
   socket.on("alabama", async (object, answer) => {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 10);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -302,7 +302,7 @@ io.on("connection", function (socket) {
       messages = internalAttacker.readMessage(message, false)
     }
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 3);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -369,7 +369,7 @@ io.on("connection", function (socket) {
   ///Sicherheitslücke
   socket.on("got-new-messages?", async function (data, answer) {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      res = await rateLimiter.consume(socket.handshake.address, 25);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -406,7 +406,7 @@ io.on("connection", function (socket) {
 
   socket.on("message-received", async (messageId, senderID, answer) => {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 3);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -462,7 +462,7 @@ io.on("connection", function (socket) {
   //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
   socket.on("who-received-my-messages", async function (data, answer) {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 15);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -504,7 +504,7 @@ io.on("connection", function (socket) {
   //Nachrichten sind engültig zugestellt und Sender hat dies auch bestätigt bekommen. Nachrichten aus DB löschen
   socket.on("conclude-messages-exchange", async (messageIds, answer) => {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 3);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -537,7 +537,7 @@ io.on("connection", function (socket) {
   //Key Exchange Funktionen:
   socket.on("initiate-key-exchange", async (data, answer) => {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 5);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -593,7 +593,7 @@ io.on("connection", function (socket) {
 
   socket.on("online-key-response", async function (data, answer) {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 3);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -673,7 +673,7 @@ io.on("connection", function (socket) {
 
   socket.on("check-for-key-requests", async function (data, answer) {
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 15);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -748,7 +748,7 @@ io.on("connection", function (socket) {
   socket.on("initiated-key-received", async (data, answer) => {
     console.log("initiated-key-received");
     try {
-      await rateLimiter.consume(socket.handshake.address);
+      await rateLimiter.consume(socket.handshake.address, 3);
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
