@@ -42,7 +42,7 @@ mongodb.connect().then(
 const { RateLimiterMemory } = require("rate-limiter-flexible");
 //TODO make the limit more adaptable/flexible/add burst limiter
 const rateLimiter = new RateLimiterMemory({
-  points: 100, // 100 points
+  points: 10000, // 100 points
   duration: 1, // per 1 seconds
 });
 
@@ -140,6 +140,12 @@ io.on("connection", function (socket) {
       if (object.skipVerification) {
         //shortcut to avoid sending messagebird sms
         console.log("Skipping verification");
+        var existance = await mongodb.findExistingRegistration(
+          preUserObject.number
+        );
+        if(existance){
+          answer("Error: Number already exists");
+        }
         preUserObject.verified = true;
         var newUserObject = await mongodb.addNewUser(preUserObject);
         if (newUserObject.verified) {
@@ -159,7 +165,9 @@ io.on("connection", function (socket) {
         var existance = await mongodb.findExistingRegistration(
           preUserObject.number
         );
-        console.log(existance);
+        if(existance){
+          answer("Error: Number already exists");
+        }
         //Request distribution of SMS token
         var bird = await msgbird
           .sendVerificationSMS(String(preUserObject.number))
@@ -612,6 +620,7 @@ io.on("connection", function (socket) {
             var socketID = getSocketId(data[i].requesterForeignId);
             finalKeyObject = {
               //Damit der Empfänger zuordnen kann.
+              mongodDbObjectId: data[i].mongodDbObjectId,
               responderId: socket.request.user.foreignId,
               keyResponse: data[i].responderPublicKey,
               chatId: data[i].chatId,
@@ -647,7 +656,7 @@ io.on("connection", function (socket) {
             } else {
               var OverwriteStatus = await mongodb.overWriteSingleExchangeObject(
                 permanentIdOfRequester,
-                data[i].receiverForeignId,
+                data[i].requesterForeignId,
                 data[i].responderPublicKey,
                 data[i].chatId
               );
@@ -695,7 +704,7 @@ io.on("connection", function (socket) {
           listOfResponses = [];
           for (var i = 0; i < responses.length; i++) {
             listOfResponses.push({
-              mongodDbObjectId: listOfResponses[i]._id,
+              mongodDbObjectId: responses[i]._id,
               responderId: responses[i].receiverForeignId,
               keyResponse: responses[i].senderPublicKey,
             });
@@ -720,8 +729,11 @@ io.on("connection", function (socket) {
           listOfInitiatedObjects = [];
           for (var i = 0; i < initiaedObjects.length; i++) {
             listOfInitiatedObjects.push({
+              mongodDbObjectId: initiaedObjects[i]._id,
               requesterForeignId: initiaedObjects[i].senderForeignId,
               requesterPublicKey: initiaedObjects[i].senderPublicKey,
+              chatId: initiaedObjects[i].chatId,
+              groupName: initiaedObjects[i].groupName,
             });
           }
           var socketId = getSocketId(data.foreignId);
@@ -737,6 +749,7 @@ io.on("connection", function (socket) {
   });
 
   socket.on("initiated-key-received", async (data, answer) => {
+    console.log("initiated-key-received");
     try {
       await rateLimiter.consume(socket.handshake.address);
     } catch (rejRes) {
@@ -756,7 +769,7 @@ io.on("connection", function (socket) {
       console.log(data);
       console.log(data.keyID);
       try {
-        await mongodb.deleteKeyExchange(data.keyId);
+        await mongodb.deleteKeyExchange(data.keyID);
         answer(true);
       } catch (error) {
         console.log(error);

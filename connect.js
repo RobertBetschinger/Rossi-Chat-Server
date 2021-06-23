@@ -3,6 +3,7 @@ require("dotenv").config();
 const { response } = require("express");
 const mongoose = require("mongoose");
 const { options } = require("./router.js");
+var ObjectID = require('mongodb').ObjectID;
 require("./models/user.model.js");
 require("./models/message.model.js");
 require("./models/key.model.js");
@@ -426,7 +427,7 @@ async function searchForInitiatedExchanges(foreignId, privateId) {
       function (err, message) {
         if (err) return handleError(err);
       }
-    );
+    ).sort('timestamp');
     return exchangeObjects;
     //das mit dem Löschen muss noch eingebaut werden.
   } catch (error) {
@@ -456,9 +457,10 @@ async function overWriteSingleExchangeObject(permanentID, foreignID, answeredKey
   console.log("Connect.js searchForRequestedSingleExhange and overwrite itoverwrite ");
   try {
     console.log("Mit dieser Foreign id : " + foreignID);
-    var query = {senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated"}
+    var query = {senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated"};
+    var update = {status: 'answered', senderPublicKey: answeredKey, chatId: cId};
     exchangeObject = await KeyExchange.findOneAndUpdate(
-      {query,$set: { status: "answered",senderPublicKey: answeredKey, chatId: cId}}, { new: true },
+      query, update, {new:true},
       function (err, message) {
         if (err) return handleError(err);
       }
@@ -479,10 +481,10 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
         senderForeignId: foreignId,
         status: "answered",
       },
-      function (err, message) {
+      function (err) {
         if (err) return handleError(err);
       }
-    );
+    ).sort('timestamp');
     console.log(typeof answeredExchangeObjects);
     return answeredExchangeObjects;
     //Das mit dem löschen muss noch eingebaut werden.
@@ -493,15 +495,16 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
 }
 
 async function deleteKeyExchange(deleteThisKey) {
-  console.log("Connect.js findMessagesForUser");
+  console.log("Connect.js deleteKeyExchange");
   try {
-    KeyExchange.deleteOne({ _id: deleteThisKey }),
-      function (err, message) {
+    const objectId = new ObjectID(deleteThisKey);
+    await KeyExchange.deleteOne({ _id: objectId }),
+      function (err) {
         if (err) return handleError(err);
       };
   } catch (error) {
     console.log(error);
-    console.log("deleteThisKey failed");
+    console.log("deleteKeyExchange failed");
   }
 }
 
