@@ -18,12 +18,19 @@ function connect() {
     "mongodb+srv://rossi-chat-server:" +
     process.env.MONGO_ATLAS_CREDS +
     "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
-    { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, }
+    { useNewUrlParser: true, useUnifiedTopology: true,useCreateIndexes:true }
 
   );
 }
 
-
+// Disconnect der DB optional
+//function disconnect() {
+//    mongoose.connection.close()
+//};
+//Intern Docs
+//TODO:
+//Alles auf Try Catch umschreiben, damit der Server nicht abschmieren kann.
+//Nachsehen ob man Dokumente automatisch löschen kann anhand von Timestamp /Lifetime
 
 //Alle Funktionen die zum User Gehören. AddNewUser, FindUserByNumber, FindUserPermanentID
 
