@@ -560,6 +560,7 @@ io.on("connection", function (socket) {
             console.log("the current Exchange Partner is online");
             var socketId = getSocketId(data[i].receiverForeignId);
             var onlineKeyExchangeObject = {
+              phoneNumber: data[i].phoneNumber,
               requesterForeignId: data[i].senderForeignId,
               requesterPublicKey: data[i].senderPublicKey,
               chatId: data[i].chatId,
@@ -571,6 +572,7 @@ io.on("connection", function (socket) {
               .emit("request-key-response", onlineKeyExchangeObject);
           } else {
             const keyExchangeObject = {
+              phoneNumber: data[i].phoneNumber,
               senderPrivateId: data[i].senderPrivateId,
               senderForeignId: data[i].senderForeignId,
               receiverForeignId: data[i].receiverForeignId,
@@ -731,6 +733,7 @@ io.on("connection", function (socket) {
               requesterPublicKey: initiaedObjects[i].senderPublicKey,
               chatId: initiaedObjects[i].chatId,
               groupName: initiaedObjects[i].groupName,
+              phoneNumber: initiaedObjects[i].phoneNumber,
             });
           }
           var socketId = getSocketId(data.foreignId);
