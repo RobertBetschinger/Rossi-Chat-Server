@@ -38,7 +38,8 @@ mongodb.connect().then(
 //----- rate limiting -----//
 const { RateLimiterMemory } = require("rate-limiter-flexible");
 const rateLimiter = new RateLimiterMemory({
-  points: 100, // 100 points
+  //TODO für abgabe auf 100 Punkte setzen, wenn man mit mehreren Emulatoren testet kommen die Anfragen alle von der gleichen IP, was das rate-limiting triggern kann
+  points: 1000, // 100 points
   duration: 3, // per 3 seconds
 });
 
@@ -288,8 +289,11 @@ io.on("connection", function (socket) {
         if (intAttackerMode == true) {
           internalAttacker.readForeignId(user.foreignId)
         }
-        console.log(user.foreignId);
-        answer(user.foreignId);
+        if(user !== null){
+          answer(user.foreignId);
+        } else {
+          answer("User not found");
+        }
       } catch (error) {
         console.log(error);
       }
