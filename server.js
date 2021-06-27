@@ -570,6 +570,7 @@ io.on("connection", function (socket) {
               chatId: data[i].chatId,
               groupName: data[i].groupName,
               timestamp: data[i].timestamp,
+              force: data[i].force,
             };
             socket.broadcast
               .to(socketId)
@@ -584,6 +585,7 @@ io.on("connection", function (socket) {
               timestamp: data[i].timestamp,
               chatId: data[i].chatId,
               groupName: data[i].groupName,
+              force: data[i].force,
               status: "initiated",
               //status2 = answered
             };
@@ -627,6 +629,7 @@ io.on("connection", function (socket) {
               responderId: socket.request.user.foreignId,
               keyResponse: data[i].responderPublicKey,
               chatId: data[i].chatId,
+              force: data[i].force,
             };
             socket.broadcast
               .to(socketID)
@@ -651,6 +654,7 @@ io.on("connection", function (socket) {
                 senderPublicKey: data[i].responderPublicKey,
                 timestamp: data[i].timestamp,
                 chatId: data[i].chatId,
+                force: data[i].force,
                 status: "answered",
               };
 
@@ -710,6 +714,7 @@ io.on("connection", function (socket) {
               mongodDbObjectId: responses[i]._id,
               responderId: responses[i].receiverForeignId,
               keyResponse: responses[i].senderPublicKey,
+              force: responses[i].force,
             });
           }
           var socketId = getSocketId(data.foreignId);
@@ -738,6 +743,7 @@ io.on("connection", function (socket) {
               chatId: initiaedObjects[i].chatId,
               groupName: initiaedObjects[i].groupName,
               phoneNumber: initiaedObjects[i].phoneNumber,
+              force: initiaedObjects[i].force,
             });
           }
           var socketId = getSocketId(data.foreignId);
