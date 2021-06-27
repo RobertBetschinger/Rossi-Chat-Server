@@ -388,10 +388,11 @@ async function senderForeignIdWithMessageId(messageId) {
 async function deleteMessage(deleteMessages) {
   console.log("Connect.js findMessagesForUser");
   try {
-    Message.deleteOne({ messageId: { $in: deleteMessages } }),
-      function (err, message) {
-        if (err) return handleError(err);
-      };
+    deleteMessages.forEach((mId) => {
+      Message.deleteOne({messageId: mId}, function (err) {
+        if (err) console.log(err);
+      });
+    });
   } catch (error) {
     console.log(error);
     console.log("Message wasnt saved Online, so it failed");
@@ -498,10 +499,10 @@ async function deleteKeyExchange(deleteThisKey) {
   console.log("Connect.js deleteKeyExchange");
   try {
     const objectId = new ObjectID(deleteThisKey);
-    await KeyExchange.deleteOne({ _id: objectId }),
+    await KeyExchange.deleteOne({ _id: objectId },
       function (err) {
         if (err) return handleError(err);
-      };
+      });
   } catch (error) {
     console.log(error);
     console.log("deleteKeyExchange failed");
