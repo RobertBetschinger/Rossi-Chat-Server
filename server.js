@@ -127,6 +127,7 @@ io.on("connection", function (socket) {
       var forid = ID();
       //Create Userobject with default verification status: false
       const preUserObject = {
+        _id: String(privateid)+String(forid),
         privateuserId: privateid,
         foreignId: forid,
         number: object.phonenumber,
@@ -175,7 +176,7 @@ io.on("connection", function (socket) {
         console.log("Next: Adding Messagebird Id and Number to DB");
         //Add new registration to db
         var result = await mongodb.addNewSMSRegistration(
-          bird._id,
+          bird.id,
           preUserObject.number
         );
         //Add new User to db
