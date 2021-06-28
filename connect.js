@@ -212,11 +212,11 @@ function findUserByNumberInMessagebird(number) {
           reject(err);
         }
         else {
-          resolve(doc.birdId)
+          resolve(doc)
         }
       });
     })
-  } catch (error) {
+  } catch (err) {
     console.log(error)
   }
 };
