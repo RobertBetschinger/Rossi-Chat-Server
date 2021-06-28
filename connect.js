@@ -212,7 +212,7 @@ function findUserByNumberInMessagebird(number) {
           reject(err);
         }
         else {
-          resolve(doc._id)
+          resolve(doc.birdId)
         }
       });
     })
@@ -305,7 +305,7 @@ async function addMessage(messageobject) {
     });
   } catch (error) {
     console.log(error);
-    console.log("Coudnt add the message to db");
+    console.log("Couldnt add the message to db");
     return false;
   }
 }
