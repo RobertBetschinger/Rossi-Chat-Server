@@ -222,6 +222,10 @@ io.on("connection", function (socket) {
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
         answer(jwtuser, accessToken);
       }
+      else {
+        console.log("Wrong token, access denied");
+        answer("Rejected due to wrong token, access denied");
+      }
     } catch (error) {
       console.error(error);
       answer("rejected");
