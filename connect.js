@@ -207,12 +207,13 @@ function findUserByNumberInMessagebird(number) {
   console.log("Atempting to find user BirdId in DB")
   try {
     return new Promise((resolve, reject) => {
-      Bird.findOne({phonenumber: String(number)}, function (err, bird) {
+      Bird.findOne({phonenumber: String(number)}, function (err, res) {
         if (err) {
           reject(err);
         }
         else {
-          resolve(bird);
+          console.log(res)
+          resolve(res.birdId);
         }
       });
     })
