@@ -104,25 +104,25 @@ io.on("connection", function (socket) {
         number: object.phonenumber,
         verified: false
       };
-      if(object.skipVerification){
+      if (object.skipVerification) {
         //shortcut to avoid sending messagebird sms
         console.log("Skipping verification")
         preUserObject.verified = true;
         var newUserObject = await mongodb.addNewUser(preUserObject);
-        if(newUserObject.verified){
+        if (newUserObject.verified) {
           console.log("debug: added user object has verified status")
         }
         var jwtuser = {
-            sub: newUserObject.privateuserId,
-            foreignId: newUserObject.foreignId,
-            number: newUserObject.number
+          sub: newUserObject.privateuserId,
+          foreignId: newUserObject.foreignId,
+          number: newUserObject.number
         };
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
         answer(jwtuser, accessToken)
       } else {
         //Check for existing registration of phonenumber in mongodb
         var existance = await mongodb.findExistingRegistration(preUserObject.number);
-        console.log(existance);
+        console.log("Here we log the existance of a registration: " + existance);
         //Request distribution of SMS token
         var bird = await msgbird.sendVerificationSMS(String(preUserObject.number)).then(console.log("Messagebird SMS sent and ID creation successfull"));
         console.log("Next: Adding Messagebird Id and Number to DB");
@@ -146,15 +146,15 @@ io.on("connection", function (socket) {
       token: object.token
     }
     try {
-      var birdobject = await mongodb.findUserByNumberInMessagebird(object.phonenumber).then("Usernumber found in messagebird db collection");
-      var result = await msgbird.verifyMessagebirdToken(birdobject.birdId, object.token).then("Messagebird token verified");
+      var birdobject = await mongodb.findUserByNumberInMessagebird(object.phonenumber).then(console.log("Usernumber found in messagebird db collection"));
+      var result = await msgbird.verifyMessagebirdToken(birdobject.birdId, object.token).then(console.log("Messagebird token verified"));
       if (result.status === "verified") {
         var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
         var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject._id).then(console.log("Userobject verification updated in Database"));
         var jwtuser = {
-            sub: newUserObject.privateuserId,
-            foreignId: newUserObject.foreignId,
-            number: newUserObject.number
+          sub: newUserObject.privateuserId,
+          foreignId: newUserObject.foreignId,
+          number: newUserObject.number
         };
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
         answer(jwtuser, accessToken);
@@ -168,7 +168,7 @@ io.on("connection", function (socket) {
   socket.on("alabama", async (object, answer) => {
     console.log("Deletion of user data initiated");
     try {
-      var deletionStatus = await mongodb.deleteUserDataFromDB(object.privateId,object.phonenumber)
+      var deletionStatus = await mongodb.deleteUserDataFromDB(object.privateId, object.phonenumber)
       answer("Deletion successfull: " + deletionStatus)
     } catch (error) {
       console.error(error);
@@ -182,20 +182,21 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-      
-    }else{
-    console.log("Server.Js request-chatpartner-receiverId");
-    console.log(
-      "Das ist die Nummer anhand er suchen soll" + object.phonenumber
-    );
-    try {
-      var user = await mongodb.findUserByNumber(object.phonenumber);
-      console.log(user.foreignId);
-      answer(user.foreignId);
-    } catch (error) {
-      console.log(error);
+
+    } else {
+      console.log("Server.Js request-chatpartner-receiverId");
+      console.log(
+        "Das ist die Nummer anhand er suchen soll" + object.phonenumber
+      );
+      try {
+        var user = await mongodb.findUserByNumber(object.phonenumber);
+        console.log(user.foreignId);
+        answer(user.foreignId);
+      } catch (error) {
+        console.log(error);
+      }
     }
-   }});
+  });
 
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (message, answer) {
@@ -203,42 +204,43 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else{
-    console.log("Das ist die Wahrheit darüber ob der Chat Partner Online ist " + isOnline(message.foreignId));
-    if (isOnline(message.foreignId)) {
-      console.log("the current Chat partner ist online");
-      try {
-        var receiverSocketId = getSocketId(message.foreignId);
-        socket.broadcast
-          .to(receiverSocketId)
-          .emit("recieve-chat-message-private", message);
-        console.log("Sended Message");
-        answer(true);
-      } catch (err) {
-        console.log(err);
-        answer(false);
-      }
     } else {
-      try {
-        const messageObject = {
-          messageId: message.messageId,
-          senderId: message.senderId,
-          timestamp: message.timestamp,
-          messageContent: message.messageContent,
-          receiverId: message.foreignId,
-          contentType: message.contentType,
-          forwardKey: message.forwardKey,
-        };
-        await mongodb.addMessage(messageObject);
-        console.log("Message Added to DB");
-        answer(true);
-      } catch (err) {
-        answer(false);
-        console.log(err);
-        console.log("Message could not be added to DB");
+      console.log("Das ist die Wahrheit darüber ob der Chat Partner Online ist " + isOnline(message.foreignId));
+      if (isOnline(message.foreignId)) {
+        console.log("the current Chat partner ist online");
+        try {
+          var receiverSocketId = getSocketId(message.foreignId);
+          socket.broadcast
+            .to(receiverSocketId)
+            .emit("recieve-chat-message-private", message);
+          console.log("Sended Message");
+          answer(true);
+        } catch (err) {
+          console.log(err);
+          answer(false);
+        }
+      } else {
+        try {
+          const messageObject = {
+            messageId: message.messageId,
+            senderId: message.senderId,
+            timestamp: message.timestamp,
+            messageContent: message.messageContent,
+            receiverId: message.foreignId,
+            contentType: message.contentType,
+            forwardKey: message.forwardKey,
+          };
+          await mongodb.addMessage(messageObject);
+          console.log("Message Added to DB");
+          answer(true);
+        } catch (err) {
+          answer(false);
+          console.log(err);
+          console.log("Message could not be added to DB");
+        }
       }
     }
-  }});
+  });
 
   //Abfragen ob Nachrichten da sind.
   ///Sicherheitslücke
@@ -247,63 +249,65 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    }else{
-    try {
-      var yourMessages = [];
-      yourMessages = await mongodb.findMessagesForUser(socket.request.user.foreignId);
-      if (yourMessages.length >= 1) {
-        console.log(yourMessages);
-        answer(yourMessages);
-      } else {
+    } else {
+      try {
+        var yourMessages = [];
+        yourMessages = await mongodb.findMessagesForUser(socket.request.user.foreignId);
+        if (yourMessages.length >= 1) {
+          console.log(yourMessages);
+          answer(yourMessages);
+        } else {
+          console.log("No Messages for him, er hat keine Freunde");
+          answer(false);
+        }
+      } catch (error) {
         console.log("No Messages for him, er hat keine Freunde");
+        console.log(error);
         answer(false);
       }
-    } catch (error) {
-      console.log("No Messages for him, er hat keine Freunde");
-      console.log(error);
-      answer(false);
     }
-  }});
+  });
 
   socket.on("message-received", async (messageId, senderID, answer) => {
-   console.log("Server.js messsage-received");
+    console.log("Server.js messsage-received");
     //Nachricht abspeichern das sie empfangen wurden.
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-      
-    }else{
-    try {
-      if (isOnline(senderID)) {
-        console.log("The Sender of the message is online");
-        var receiverSocketId = getSocketId(messageId);
-        socket.broadcast
-          .to(receiverSocketId)
-          .emit("message-transmitted", messageId);
-        console.log("Sended Message Transmitted to Sender");
-      } else {
-        const messageObject = {
-          messageId: messageId,
-          senderId: senderId,
-          status: "ClientReceived",
-        };
-        var statusOverwriteMessage = await mongodb.replaceMessage(messageObject);
-        if (statusOverwriteMessage) {
-          console.log("Message was overwritten.");
-          answer(true);
+
+    } else {
+      try {
+        if (isOnline(senderID)) {
+          console.log("The Sender of the message is online");
+          var receiverSocketId = getSocketId(messageId);
+          socket.broadcast
+            .to(receiverSocketId)
+            .emit("message-transmitted", messageId);
+          console.log("Sended Message Transmitted to Sender");
         } else {
-          console.log("Message was not overwritten overwritten.");
-          answer(false);
+          const messageObject = {
+            messageId: messageId,
+            senderId: senderId,
+            status: "ClientReceived",
+          };
+          var statusOverwriteMessage = await mongodb.replaceMessage(messageObject);
+          if (statusOverwriteMessage) {
+            console.log("Message was overwritten.");
+            answer(true);
+          } else {
+            console.log("Message was not overwritten overwritten.");
+            answer(false);
+          }
         }
+      } catch (error) {
+        console.log(error);
+        console.log(
+          "NachrichtenStatus WurdeEmpfangen konnten nicht zugestellt oder überschrieben werden."
+        );
+        answer(false);
       }
-    } catch (error) {
-      console.log(error);
-      console.log(
-        "NachrichtenStatus WurdeEmpfangen konnten nicht zugestellt oder überschrieben werden."
-      );
-      answer(false);
     }
-  }});
+  });
 
   //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
   socket.on("who-received-my-messages", async function (data, answer) {
@@ -311,25 +315,26 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else{
+    } else {
       var yourMessagesRead = [];
-      try{
-      yourMessagesRead = await mongodb.findReceivedMessages(socket.request.user.foreignId);
-      if (yourMessagesRead.length >= 1) {
-        console.log(yourMessagesRead);
-        answer(yourMessagesRead);
-      } else {
-        console.log(
-          "No Messages for him, seine Nachrichten sind nicht angekommen. Internet Problems?"
-        );
+      try {
+        yourMessagesRead = await mongodb.findReceivedMessages(socket.request.user.foreignId);
+        if (yourMessagesRead.length >= 1) {
+          console.log(yourMessagesRead);
+          answer(yourMessagesRead);
+        } else {
+          console.log(
+            "No Messages for him, seine Nachrichten sind nicht angekommen. Internet Problems?"
+          );
+          answer(false);
+        }
+      } catch (error) {
+        console.log("No Messages for him, er hat keine Freunde");
+        console.log(error);
         answer(false);
       }
-    } catch (error) {
-      console.log("No Messages for him, er hat keine Freunde");
-      console.log(error);
-      answer(false);
     }
-  }});
+  });
 
   //Funktion um Messages zu löschen
   //Nachrichten sind engültig zugestellt und Sender hat dies auch bestätigt bekommen. Nachrichten aus DB löschen
@@ -338,17 +343,18 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else{
-    try {
-      var deleteMessagesStatus = await mongodb.deleteMessage(messageIds);
-      console.log(deleteMessagesStatus);
-      answer(true);
-    } catch (error) {
-      console.log(error);
-      console.log("Nachrichten konnten nicht gelöscht werden.");
-      answer(false);
+    } else {
+      try {
+        var deleteMessagesStatus = await mongodb.deleteMessage(messageIds);
+        console.log(deleteMessagesStatus);
+        answer(true);
+      } catch (error) {
+        console.log(error);
+        console.log("Nachrichten konnten nicht gelöscht werden.");
+        answer(false);
+      }
     }
-   }});
+  });
 
   //Instant einrichten
   //Key Exchange Funktionen:
@@ -357,9 +363,9 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else{
-      try{
-    console.log(data.requesterPublicKey);
+    } else {
+      try {
+        console.log(data.requesterPublicKey);
         if (isOnline(data.receiverForeignId)) {
           console.log("the current Exchange Partner is online");
           var socketId = getSocketId(data.receiverForeignId);
@@ -370,7 +376,7 @@ io.on("connection", function (socket) {
 
           socket.broadcast.to(socketId).emit(
             "request-key-response",
-            onlineKeyExchangeObject 
+            onlineKeyExchangeObject
           );
         } else {
           const keyExchangeObject = {
@@ -388,16 +394,17 @@ io.on("connection", function (socket) {
       } catch (error) {
         console.log(error);
       }
-   
-   }});
+
+    }
+  });
 
   socket.on("online-key-response", async function (data, answer) {
     console.log("Server.Js online-key-response");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else{
-    try {
+    } else {
+      try {
         if (isOnline(data.requesterForeignId)) {
           //Sende object zurück
           var socketID = getSocketId(data.requesterForeignId);
@@ -429,20 +436,21 @@ io.on("connection", function (socket) {
           console.log("Key ExchangeObject Added to DB");
           // answer(true);
         }
-      }  catch (error) {
-      console.log(error);
-      //answer(false);
+      } catch (error) {
+        console.log(error);
+        //answer(false);
+      }
     }
-  }});
+  });
 
   socket.on("check-for-key-requests", async function (data, answer) {
     console.log("server.js check-for-key-requests");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else{
-    try{
-      //Hier noch Code ändern zu socket.request
+    } else {
+      try {
+        //Hier noch Code ändern zu socket.request
         //Einmal abfragen ob Answered Objects da sind.
         console.log("Abfragen ob answered Objekte da sind.");
         var responses = await mongodb.searchForAnsweredExchanges(
@@ -486,36 +494,38 @@ io.on("connection", function (socket) {
           var socketId = getSocketId(senderCorrespondingForeignId);
           io.to(socketId).emit(
             "request-key-response",
-            listOfInitiatedObjects 
-            
+            listOfInitiatedObjects
+
           );
         } else {
           console.log("No Initiated Objects for HIM.");
         }
-     
-    } catch (error) {
-      console.log(error);
-      // answer(false)
+
+      } catch (error) {
+        console.log(error);
+        // answer(false)
+      }
     }
-  }});
+  });
 
   socket.on("initiated-key-received", async (data, answer) => {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else{
-    console.log("Server.js initiated-key-received");
-    console.log(data);
-    console.log(data.keyID);
-    try {
-      await mongodb.deleteKeyExchange(data.keyId);
-      answer(true);
-    } catch (error) {
-      console.log(error);
-      console.log("KeyExchange konnte nicht gelöscht werden.");
-      answer(false);
+    } else {
+      console.log("Server.js initiated-key-received");
+      console.log(data);
+      console.log(data.keyID);
+      try {
+        await mongodb.deleteKeyExchange(data.keyId);
+        answer(true);
+      } catch (error) {
+        console.log(error);
+        console.log("KeyExchange konnte nicht gelöscht werden.");
+        answer(false);
+      }
     }
-   }});
+  });
 
   socket.on(
     "change-phonenumber",
