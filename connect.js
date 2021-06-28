@@ -212,7 +212,7 @@ function findUserByNumberInMessagebird(number) {
           reject(err);
         }
         else {
-          resolve(doc)
+          resolve(doc.ObjectId)
         }
       });
     })
