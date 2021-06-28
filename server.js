@@ -10,7 +10,6 @@ var io = require("socket.io")(server, {
 const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
-const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
 const secret = process.env.ACCESS_TOKEN_SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
 const jwt = require("jsonwebtoken");
@@ -24,12 +23,12 @@ var intAttackerMode = false;
 
 mongodb.connect().then(
   () => {
-    console.log("Connection zu MongoDB ist aufgebaut");
+    console.log("MongoDB connection established");
     createServer();
   },
   (err) => {
     console.log(
-      "Keine Connection Zu MongoDB Möglich. Server wird nicht gestartet"
+      "MongoDB connection failed. Server is not starting"
     );
     console.log(err);
   }
@@ -66,7 +65,7 @@ io.use(
         );
         if (!user) {
           // return fail with an error message
-          console.log("User existiert nicht");
+          console.log("user does not exist");
           return done(null, false, "user does not exist");
         }
         // return success with a user info
@@ -116,9 +115,7 @@ io.on("connection", function (socket) {
       );
       answer(429, "Request blocked: too many requests.");
       return;
-    }
-
-
+    };
 
     console.log("Server.js request-registration");
     try {
@@ -207,7 +204,7 @@ io.on("connection", function (socket) {
     }
     console.log("Server.js verify sms token");
     try {
-      var birdId = await mongodb.findUserByNumberInMessagebird(object.phonenumber);
+      const birdId = await mongodb.findUserByNumberInMessagebird(object.phonenumber);
       var result = await msgbird.verifyMessagebirdToken(birdId, object.token);
       console.log("Usernumber found in messagebird db collection");
       console.log("Messagebird token verified");
@@ -232,7 +229,7 @@ io.on("connection", function (socket) {
 
 
 
-
+  //Nutzerdaten aus allen DB Collections löschen
   socket.on("alabama", async (object, answer) => {
     try {
       await rateLimiter.consume(socket.handshake.address, 10);
@@ -273,7 +270,7 @@ io.on("connection", function (socket) {
     }
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
     } else {
       console.log("Server.Js request-chatpartner-receiverId");
       console.log(
@@ -314,7 +311,7 @@ io.on("connection", function (socket) {
     console.log("Server.Js send-chat-message-privat");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
     } else {
       try {
         for (var i = 0; i < messages.length; i++) {
@@ -381,7 +378,7 @@ io.on("connection", function (socket) {
     console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
     } else {
       try {
         var yourMessages = [];
@@ -419,7 +416,7 @@ io.on("connection", function (socket) {
     //Nachricht abspeichern das sie empfangen wurden.
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
     } else {
       try {
         if (isOnline(senderID)) {
@@ -474,7 +471,7 @@ io.on("connection", function (socket) {
     console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
     } else {
       var yourMessagesRead = [];
       try {
@@ -515,7 +512,7 @@ io.on("connection", function (socket) {
     console.log("Server.js conclude-messages-exchange");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
     } else {
       try {
         var deleteMessagesStatus = await mongodb.deleteMessage(messageIds);
@@ -548,7 +545,7 @@ io.on("connection", function (socket) {
     console.log("Server.Js initiate-key-exchange");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
 
 
     } else {
@@ -608,7 +605,7 @@ io.on("connection", function (socket) {
     console.log("Server.Js online-key-response");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
 
 
     } else {
@@ -690,7 +687,7 @@ io.on("connection", function (socket) {
     console.log("server.js check-for-key-requests");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
     } else {
       try {
         //Hier noch Code ändern zu socket.request
@@ -767,7 +764,7 @@ io.on("connection", function (socket) {
     }
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
-      answer("Sie sind nicht berechtigt.");
+      answer("You are not authorized.");
     } else {
       console.log("Server.js initiated-key-received");
       console.log(data);
