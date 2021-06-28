@@ -209,10 +209,10 @@ io.on("connection", function (socket) {
     try {
       var birdobject = await mongodb
         .findUserByNumberInMessagebird(object.phonenumber)
-        .then("Usernumber found in messagebird db collection");
+        .then(console.log("Usernumber found in messagebird db collection"));
       var result = await msgbird
         .verifyMessagebirdToken(birdobject.birdId, object.token)
-        .then("Messagebird token verified");
+        .then(console.log("Messagebird token verified"));
       if (result.status === "verified") {
         var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
         var newUserObject = await mongodb
