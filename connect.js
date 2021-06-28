@@ -213,7 +213,6 @@ function findUserByNumberInMessagebird(number) {
           reject(err);
         }
         else {
-          console.log(res)
           resolve(res.birdId);
         }
       });
@@ -222,6 +221,7 @@ function findUserByNumberInMessagebird(number) {
     console.log(error)
   }
 };
+
 
 
 function updateUserVerificationStatus(mongodbId) {
