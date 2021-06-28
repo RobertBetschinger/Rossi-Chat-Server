@@ -207,7 +207,8 @@ function findUserByNumberInMessagebird(number) {
   console.log("Atempting to find user BirdId in DB")
   try {
     return new Promise((resolve, reject) => {
-      Bird.findOne({phonenumber: String(number)}, function (err, res) {
+      var filter = {phonenumber : String(number)}
+      Bird.findOne(filter, function (err, res) {
         if (err) {
           reject(err);
         }
@@ -225,8 +226,8 @@ function findUserByNumberInMessagebird(number) {
 
 function updateUserVerificationStatus(mongodbId) {
   return new Promise((resolve, reject) => {
-    filter = {_id: mongodbId};
-    update = {$set:{verified: true}};
+    var filter = {_id: mongodbId};
+    var update = {$set:{verified: true}};
     User.findOneAndUpdate(filter, update, {useFindAndModify: false}, { new: true }, (err, doc) => {
       if (err) {
         reject(err);
