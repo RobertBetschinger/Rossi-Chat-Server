@@ -212,7 +212,8 @@ function findUserByNumberInMessagebird(number) {
           reject(err);
         }
         else {
-          resolve(doc.ObjectId)
+          console.log(doc)
+          resolve(doc)
         }
       });
     })
