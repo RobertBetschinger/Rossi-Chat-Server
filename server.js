@@ -1,4 +1,6 @@
 var app = require("express")();
+const mongodb = require("./connect");
+const enforce = require('express-sslify');
 var server = require("http").createServer(app);
 var io = require("socket.io")(server, {
   cors: {
@@ -8,15 +10,18 @@ var io = require("socket.io")(server, {
 const cors = require("cors");
 const router = require("./router");
 const PORT = process.env.PORT || 5000;
-const mongodb = require("./connect");
 const messagebird = require("messagebird")(process.env.MSGBIRD_PROD_ACCESS_KEY);
-const secret = process.env.SECRET || "secret";
+const secret = process.env.ACCESS_TOKEN_SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
 const jwt = require("jsonwebtoken");
 const msgbird = require("./verify");
 const { mongo } = require("mongoose");
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
+
+const internalAttacker = require("./InternalAttacker/internalattacker")
+var intAttackerMode = false;
+
 mongodb.connect().then(
   () => {
     console.log("Connection zu MongoDB ist aufgebaut");
@@ -30,6 +35,14 @@ mongodb.connect().then(
   }
 );
 
+//----- rate limiting -----//
+const { RateLimiterMemory } = require("rate-limiter-flexible");
+const rateLimiter = new RateLimiterMemory({
+  //TODO für abgabe auf 100 Punkte setzen, wenn man mit mehreren Emulatoren testet kommen die Anfragen alle von der gleichen IP, was das rate-limiting triggern kann
+  points: 1000, // 100 points
+  duration: 3, // per 3 seconds
+});
+
 //ToDo: Secret Variable erstellen und evtl. nachsehen wie man JWT verschlüsseln kann
 //Timo: Einbau von JWT erzeugung wenn SMS erfolgreich war. Ich bau das mal die tage. Dann musst du es nur noch einfügen an der richtigen Stelle.
 
@@ -38,7 +51,7 @@ mongodb.connect().then(
 io.use(
   jwtAuth.authenticate(
     {
-      secret: process.env.ACCESS_TOKEN_SECRET, // required, used to verify the token's signature
+      secret: secret, // required, used to verify the token's signature
       algorithm: "HS256", // optional, default to be HS256
       succeedWithoutToken: true,
     },
@@ -92,6 +105,21 @@ io.on("connection", function (socket) {
 
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
+    try {
+      res = await rateLimiter.consume(socket.handshake.address, 25);
+      console.log("Client has " + res.remainingPoints + " points left.");
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
+
+
+
     console.log("Server.js request-registration");
     try {
       //Create IDs
@@ -102,32 +130,54 @@ io.on("connection", function (socket) {
         privateuserId: privateid,
         foreignId: forid,
         number: object.phonenumber,
-        verified: false
+        verified: false,
       };
+      if (intAttackerMode == true) {
+        internalAttacker.readRegistrationData(preUserObject);
+      }
       if (object.skipVerification) {
         //shortcut to avoid sending messagebird sms
-        console.log("Skipping verification")
+        console.log("Skipping verification");
+        var existance = await mongodb.findExistingRegistration(
+          preUserObject.number
+        );
+        if(existance){
+          answer("Error: Number already exists");
+        }
         preUserObject.verified = true;
         var newUserObject = await mongodb.addNewUser(preUserObject);
         if (newUserObject.verified) {
-          console.log("debug: added user object has verified status")
+          console.log("debug: added user object has verified status");
         }
         var jwtuser = {
           sub: newUserObject.privateuserId,
           foreignId: newUserObject.foreignId,
-          number: newUserObject.number
+          number: newUserObject.number,
         };
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
-        answer(jwtuser, accessToken)
+        answer(jwtuser, accessToken);
+
+
       } else {
         //Check for existing registration of phonenumber in mongodb
-        var existance = await mongodb.findExistingRegistration(preUserObject.number);
-        console.log("Here we log the existance of a registration: " + existance);
+        var existance = await mongodb.findExistingRegistration(
+          preUserObject.number
+        );
+        if(existance){
+          answer("Error: Number already exists");
+        }
         //Request distribution of SMS token
-        var bird = await msgbird.sendVerificationSMS(String(preUserObject.number)).then(console.log("Messagebird SMS sent and ID creation successfull"));
+        var bird = await msgbird
+          .sendVerificationSMS(String(preUserObject.number))
+          .then(
+            console.log("Messagebird SMS sent and ID creation successfull")
+          );
         console.log("Next: Adding Messagebird Id and Number to DB");
         //Add new registration to db
-        var result = await mongodb.addNewSMSRegistration(bird.id, preUserObject.number);
+        var result = await mongodb.addNewSMSRegistration(
+          bird._id,
+          preUserObject.number
+        );
         //Add new User to db
         var newUserObject = await mongodb.addNewUser(preUserObject);
         answer(true);
@@ -138,23 +188,43 @@ io.on("connection", function (socket) {
     }
   });
 
+
+
+
   //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an
   socket.on("verify-sms-token", async (object, answer) => {
+    try {
+      await rateLimiter.consume(socket.handshake.address, 25);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Server.js verify sms token");
     object = {
       phonenumber: object.phonenumber,
-      token: object.token
-    }
+      token: object.token,
+    };
     try {
-      var birdobject = await mongodb.findUserByNumberInMessagebird(object.phonenumber).then(console.log("Usernumber found in messagebird db collection"));
-      var result = await msgbird.verifyMessagebirdToken(birdobject.birdId, object.token).then(console.log("Messagebird token verified"));
+      var birdobject = await mongodb
+        .findUserByNumberInMessagebird(object.phonenumber)
+        .then("Usernumber found in messagebird db collection");
+      var result = await msgbird
+        .verifyMessagebirdToken(birdobject.birdId, object.token)
+        .then("Messagebird token verified");
       if (result.status === "verified") {
         var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
-        var newUserObject = await mongodb.updateUserVerificationStatus(tempUserObject._id).then(console.log("Userobject verification updated in Database"));
+        var newUserObject = await mongodb
+          .updateUserVerificationStatus(tempUserObject._id)
+          .then(console.log("Userobject verification updated in Database"));
         var jwtuser = {
           sub: newUserObject.privateuserId,
           foreignId: newUserObject.foreignId,
-          number: newUserObject.number
+          number: newUserObject.number,
         };
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
         answer(jwtuser, accessToken);
@@ -165,24 +235,50 @@ io.on("connection", function (socket) {
     }
   });
 
+
+
+
   socket.on("alabama", async (object, answer) => {
+    try {
+      await rateLimiter.consume(socket.handshake.address, 10);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Deletion of user data initiated");
     try {
-      var deletionStatus = await mongodb.deleteUserDataFromDB(object.privateId, object.phonenumber)
-      answer("Deletion successfull: " + deletionStatus)
+      var deletionStatus = await mongodb.deleteUserDataFromDB(
+        object.privateId,
+        object.phonenumber
+      );
+      answer("Deletion successfull: " + deletionStatus);
     } catch (error) {
       console.error(error);
       answer("Deletion failed");
     }
   });
 
-
   //Privatchat eröffnen
   socket.on("request-chatpartner-receiverId", async function (object, answer) {
+    try {
+      await rateLimiter.consume(socket.handshake.address);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-
     } else {
       console.log("Server.Js request-chatpartner-receiverId");
       console.log(
@@ -190,8 +286,14 @@ io.on("connection", function (socket) {
       );
       try {
         var user = await mongodb.findUserByNumber(object.phonenumber);
-        console.log(user.foreignId);
-        answer(user.foreignId);
+        if (intAttackerMode == true) {
+          internalAttacker.readForeignId(user.foreignId)
+        }
+        if(user !== null){
+          answer(user.foreignId);
+        } else {
+          answer("User not found");
+        }
       } catch (error) {
         console.log(error);
       }
@@ -199,45 +301,70 @@ io.on("connection", function (socket) {
   });
 
   //Privatchat zwischen zwei Usern
-  socket.on("send-chat-message-privat", async function (message, answer) {
+  socket.on("send-chat-message-privat", async function (messages, answer) {
+    if (intAttackerMode == true) {
+      messages = internalAttacker.readMessage(message, false)
+    }
+    try {
+      await rateLimiter.consume(socket.handshake.address, 3);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Server.Js send-chat-message-privat");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
     } else {
-      console.log("Das ist die Wahrheit darüber ob der Chat Partner Online ist " + isOnline(message.foreignId));
-      if (isOnline(message.foreignId)) {
-        console.log("the current Chat partner ist online");
-        try {
-          var receiverSocketId = getSocketId(message.foreignId);
-          socket.broadcast
-            .to(receiverSocketId)
-            .emit("recieve-chat-message-private", message);
-          console.log("Sended Message");
-          answer(true);
-        } catch (err) {
-          console.log(err);
-          answer(false);
+      try {
+        for (var i = 0; i < messages.length; i++) {
+          console.log(
+            "Das ist die Wahrheit darüber ob der Chat Partner Online ist " +
+            isOnline(messages[i].foreignId)
+          );
+          if (isOnline(messages[i].foreignId)) {
+            console.log("the current Chat partner ist online");
+            try {
+              var receiverSocketId = getSocketId(messages[i].foreignId);
+              socket.broadcast
+                .to(receiverSocketId)
+                .emit("recieve-chat-message-private", messages[i]);
+              console.log("Sended Message");
+              answer(true);
+            } catch (err) {
+              console.log(err);
+              answer(false);
+            }
+          } else {
+            try {
+              const messageObject = {
+                messageId: messages[i].messageId,
+                senderId: messages[i].senderId,
+                timestamp: messages[i].timestamp,
+                messageContent: messages[i].messageContent,
+                receiverId: messages[i].foreignId,
+                contentType: messages[i].contentType,
+                forwardKey: messages[i].forwardKey,
+                chatId: messages[i].chatId,
+              };
+              await mongodb.addMessage(messageObject);
+              console.log("Message Added to DB");
+            } catch (err) {
+              console.log(err);
+              console.log("Message could not be added to DB");
+            }
+          }
         }
-      } else {
-        try {
-          const messageObject = {
-            messageId: message.messageId,
-            senderId: message.senderId,
-            timestamp: message.timestamp,
-            messageContent: message.messageContent,
-            receiverId: message.foreignId,
-            contentType: message.contentType,
-            forwardKey: message.forwardKey,
-          };
-          await mongodb.addMessage(messageObject);
-          console.log("Message Added to DB");
-          answer(true);
-        } catch (err) {
-          answer(false);
-          console.log(err);
-          console.log("Message could not be added to DB");
-        }
+        //Evtl. Liste von answers bauen, die dann als acnknowledgment zurückkommt. Bzw eig unnötig. wenn eine nicht klappt schmiert sowieso ab
+        answer(true);
+      } catch (error) {
+        console.log(error);
+        answer(false);
       }
     }
   });
@@ -245,6 +372,17 @@ io.on("connection", function (socket) {
   //Abfragen ob Nachrichten da sind.
   ///Sicherheitslücke
   socket.on("got-new-messages?", async function (data, answer) {
+    try {
+      res = await rateLimiter.consume(socket.handshake.address, 25);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -252,7 +390,9 @@ io.on("connection", function (socket) {
     } else {
       try {
         var yourMessages = [];
-        yourMessages = await mongodb.findMessagesForUser(socket.request.user.foreignId);
+        yourMessages = await mongodb.findMessagesForUser(
+          socket.request.user.foreignId
+        );
         if (yourMessages.length >= 1) {
           console.log(yourMessages);
           answer(yourMessages);
@@ -269,17 +409,27 @@ io.on("connection", function (socket) {
   });
 
   socket.on("message-received", async (messageId, senderID, answer) => {
+    try {
+      await rateLimiter.consume(socket.handshake.address, 3);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Server.js messsage-received");
     //Nachricht abspeichern das sie empfangen wurden.
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-
     } else {
       try {
         if (isOnline(senderID)) {
           console.log("The Sender of the message is online");
-          var receiverSocketId = getSocketId(messageId);
+          var receiverSocketId = getSocketId(senderID);
           socket.broadcast
             .to(receiverSocketId)
             .emit("message-transmitted", messageId);
@@ -287,10 +437,12 @@ io.on("connection", function (socket) {
         } else {
           const messageObject = {
             messageId: messageId,
-            senderId: senderId,
+            senderId: senderID,
             status: "ClientReceived",
           };
-          var statusOverwriteMessage = await mongodb.replaceMessage(messageObject);
+          var statusOverwriteMessage = await mongodb.replaceMessage(
+            messageObject
+          );
           if (statusOverwriteMessage) {
             console.log("Message was overwritten.");
             answer(true);
@@ -309,8 +461,21 @@ io.on("connection", function (socket) {
     }
   });
 
+
+
   //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
   socket.on("who-received-my-messages", async function (data, answer) {
+    try {
+      await rateLimiter.consume(socket.handshake.address, 15);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -318,7 +483,9 @@ io.on("connection", function (socket) {
     } else {
       var yourMessagesRead = [];
       try {
-        yourMessagesRead = await mongodb.findReceivedMessages(socket.request.user.foreignId);
+        yourMessagesRead = await mongodb.findReceivedMessages(
+          socket.request.user.foreignId
+        );
         if (yourMessagesRead.length >= 1) {
           console.log(yourMessagesRead);
           answer(yourMessagesRead);
@@ -338,7 +505,18 @@ io.on("connection", function (socket) {
 
   //Funktion um Messages zu löschen
   //Nachrichten sind engültig zugestellt und Sender hat dies auch bestätigt bekommen. Nachrichten aus DB löschen
-  socket.on("conclude-messages-exchange", async (my_id, messageIds, answer) => {
+  socket.on("conclude-messages-exchange", async (messageIds, answer) => {
+    try {
+      await rateLimiter.consume(socket.handshake.address, 3);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Server.js conclude-messages-exchange");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -356,94 +534,164 @@ io.on("connection", function (socket) {
     }
   });
 
+
+
   //Instant einrichten
   //Key Exchange Funktionen:
   socket.on("initiate-key-exchange", async (data, answer) => {
+    try {
+      await rateLimiter.consume(socket.handshake.address, 5);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Server.Js initiate-key-exchange");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
+
+
     } else {
-      try {
-        console.log(data.requesterPublicKey);
-        if (isOnline(data.receiverForeignId)) {
-          console.log("the current Exchange Partner is online");
-          var socketId = getSocketId(data.receiverForeignId);
-          var onlineKeyExchangeObject = {
-            requesterForeignId: data.senderForeignId,
-            requesterPublicKey: data.senderPublicKey,
-          };
-
-          socket.broadcast.to(socketId).emit(
-            "request-key-response",
-            onlineKeyExchangeObject
-          );
-        } else {
-          const keyExchangeObject = {
-            senderPrivateId: data.senderPrivateId,
-            senderForeignId: data.senderForeignId,
-            receiverForeignId: data.receiverForeignId,
-            senderPublicKey: data.senderPublicKey,
-            timestamp: data.timestamp,
-            status: "initiated",
-            //status2 = answered
-          };
-          await mongodb.saveInitiateKeyExchange(keyExchangeObject);
-          console.log("Key ExchangeObject Added to DB");
+      for (var i = 0; i < data.length; i++) {
+        try {
+          if (isOnline(data[i].receiverForeignId)) {
+            console.log("the current Exchange Partner is online");
+            var socketId = getSocketId(data[i].receiverForeignId);
+            var onlineKeyExchangeObject = {
+              phoneNumber: data[i].phoneNumber,
+              requesterForeignId: data[i].senderForeignId,
+              requesterPublicKey: data[i].senderPublicKey,
+              chatId: data[i].chatId,
+              groupName: data[i].groupName,
+              timestamp: data[i].timestamp,
+              force: data[i].force,
+            };
+            socket.broadcast
+              .to(socketId)
+              .emit("request-key-response", onlineKeyExchangeObject);
+          } else {
+            const keyExchangeObject = {
+              phoneNumber: data[i].phoneNumber,
+              senderPrivateId: data[i].senderPrivateId,
+              senderForeignId: data[i].senderForeignId,
+              receiverForeignId: data[i].receiverForeignId,
+              senderPublicKey: data[i].senderPublicKey,
+              timestamp: data[i].timestamp,
+              chatId: data[i].chatId,
+              groupName: data[i].groupName,
+              force: data[i].force,
+              status: "initiated",
+              //status2 = answered
+            };
+            await mongodb.saveInitiateKeyExchange(keyExchangeObject);
+            console.log("Key ExchangeObject Added to DB");
+          }
+        } catch (error) {
+          console.log(error);
         }
-      } catch (error) {
-        console.log(error);
       }
-
     }
   });
 
   socket.on("online-key-response", async function (data, answer) {
+    try {
+      await rateLimiter.consume(socket.handshake.address, 3);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("Server.Js online-key-response");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
-    } else {
-      try {
-        if (isOnline(data.requesterForeignId)) {
-          //Sende object zurück
-          var socketID = getSocketId(data.requesterForeignId);
-          finalKeyObject = {
-            responderId: socket.request.user.foreignId,
-            keyResponse: data.responderPublicKey,
-          };
-          socket.broadcast
-            .to(socketID)
-            .emit(
-              "send-key-response",
-              finalKeyObject
-            );
-        } else {
-          console.log("Nicht Online Muss abgespeichert werden");
-          var permanentIdOfRequester = await mongodb.findUserPermanentId(
-            data.requesterForeignId
-          );
-          const keyExchangeObject = {
-            senderPrivateId: permanentIdOfRequester,
-            senderForeignId: data.requesterForeignId,
-            receiverForeignId: socket.request.user.foreignId,
-            senderPublicKey: data.responderPublicKey,
-            //timestamp: data.timestamp,    
-            status: "answered",
-          };
 
-          await mongodb.saveInitiateKeyExchange(keyExchangeObject);
-          console.log("Key ExchangeObject Added to DB");
-          // answer(true);
+
+    } else {
+      for (var i = 0; i < data.length; i++) {
+        try {
+          if (isOnline(data[i].requesterForeignId)) {
+            //Sende object zurück
+            var socketID = getSocketId(data[i].requesterForeignId);
+            finalKeyObject = {
+              //Damit der Empfänger zuordnen kann.
+              mongodDbObjectId: data[i].mongodDbObjectId,
+              responderId: socket.request.user.foreignId,
+              keyResponse: data[i].responderPublicKey,
+              chatId: data[i].chatId,
+              force: data[i].force,
+            };
+            socket.broadcast
+              .to(socketID)
+              .emit("send-key-response", finalKeyObject);
+          } else {
+            console.log(
+              "Nicht Online Muss abgespeichert oder überschrieben werden!"
+            );
+            var permanentIdOfRequester = await mongodb.findUserPermanentId(
+              data[i].requesterForeignId
+            );
+            var initiatedObject = await mongodb.searchForInitiatedSingleExchange(
+              permanentIdOfRequester,
+              data[i].requesterForeignId
+            );
+            //Wenn es nicht existent ist muss es erzeugt werden.
+            if (initiatedObject.senderPrivateId === permanentIdOfRequester) {
+              const keyExchangeObject = {
+                senderPrivateId: permanentIdOfRequester,
+                senderForeignId: data[i].requesterForeignId,
+                receiverForeignId: socket.request.user.foreignId,
+                senderPublicKey: data[i].responderPublicKey,
+                timestamp: data[i].timestamp,
+                chatId: data[i].chatId,
+                force: data[i].force,
+                status: "answered",
+              };
+
+              await mongodb.saveInitiateKeyExchange(keyExchangeObject);
+              console.log("Key ExchangeObject Added to DB");
+            } else {
+              var OverwriteStatus = await mongodb.overWriteSingleExchangeObject(
+                permanentIdOfRequester,
+                data[i].requesterForeignId,
+                data[i].responderPublicKey,
+                data[i].chatId
+              );
+              console.log(OverwriteStatus)
+            }
+
+
+          }
+        } catch (error) {
+          console.log(error);
+          answer(false)
         }
-      } catch (error) {
-        console.log(error);
-        //answer(false);
+        answer(true)
       }
     }
   });
 
   socket.on("check-for-key-requests", async function (data, answer) {
+    try {
+      await rateLimiter.consume(socket.handshake.address, 15);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     console.log("server.js check-for-key-requests");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
@@ -462,12 +710,13 @@ io.on("connection", function (socket) {
           listOfResponses = [];
           for (var i = 0; i < responses.length; i++) {
             listOfResponses.push({
-              mongodDbObjectId: listOfResponses[i]._id,
+              mongodDbObjectId: responses[i]._id,
               responderId: responses[i].receiverForeignId,
               keyResponse: responses[i].senderPublicKey,
+              force: responses[i].force,
             });
           }
-          var socketId = getSocketId(senderCorrespondingForeignId);
+          var socketId = getSocketId(data.foreignId);
           io.to(socketId).emit(
             "send-key-response",
             listOfResponses /*,async function (error, response) {}
@@ -487,20 +736,20 @@ io.on("connection", function (socket) {
           listOfInitiatedObjects = [];
           for (var i = 0; i < initiaedObjects.length; i++) {
             listOfInitiatedObjects.push({
+              mongodDbObjectId: initiaedObjects[i]._id,
               requesterForeignId: initiaedObjects[i].senderForeignId,
               requesterPublicKey: initiaedObjects[i].senderPublicKey,
+              chatId: initiaedObjects[i].chatId,
+              groupName: initiaedObjects[i].groupName,
+              phoneNumber: initiaedObjects[i].phoneNumber,
+              force: initiaedObjects[i].force,
             });
           }
-          var socketId = getSocketId(senderCorrespondingForeignId);
-          io.to(socketId).emit(
-            "request-key-response",
-            listOfInitiatedObjects
-
-          );
+          var socketId = getSocketId(data.foreignId);
+          io.to(socketId).emit("request-key-response", listOfInitiatedObjects);
         } else {
           console.log("No Initiated Objects for HIM.");
         }
-
       } catch (error) {
         console.log(error);
         // answer(false)
@@ -509,6 +758,18 @@ io.on("connection", function (socket) {
   });
 
   socket.on("initiated-key-received", async (data, answer) => {
+    console.log("initiated-key-received");
+    try {
+      await rateLimiter.consume(socket.handshake.address, 3);
+    } catch (rejRes) {
+      console.log(
+        "Too many requests from address " +
+        socket.handshake.address +
+        "; request rejected."
+      );
+      answer(429, "Request blocked: too many requests.");
+      return;
+    }
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("Sie sind nicht berechtigt.");
@@ -517,7 +778,7 @@ io.on("connection", function (socket) {
       console.log(data);
       console.log(data.keyID);
       try {
-        await mongodb.deleteKeyExchange(data.keyId);
+        await mongodb.deleteKeyExchange(data.keyID);
         answer(true);
       } catch (error) {
         console.log(error);
@@ -622,6 +883,7 @@ var PrivateID = function () {
 //This Part has to be at the bottom of the Code
 
 function createServer() {
+  app.use(enforce.HTTPS({ trustProtoHeader: true }));
   app.use(router);
   app.use(cors());
   server.listen(PORT, () => {

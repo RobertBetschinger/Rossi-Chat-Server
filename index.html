@@ -9,29 +9,20 @@
 
 </head>
 <body>
-    
 </body>
 
 
-<script>
-  // You should add auth_token to the query when connecting
-  // Replace THE_JWT_TOKEN with the valid one
- var socket = io('http://localhost:5000', {query: 'auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJfdm05aXgzemRjIiwiZm9yZWlnbklkIjoiX3YwMnp0bGY3OCIsIm51bWJlciI6IjAxNzYzMDE0MzgxOCIsInNwaXR6bmFtZSI6IkJlaXNwaWVsc3BpdHpuYW1lIiwiaWF0IjoxNTE2MjM5MDIyfQ.EyutSnEGE9ShftjFZ7AjgcMabCeQbJ9uplxiVvAPat0'});
-  //var socket = io('http://localhost:5000', {auth: 'auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJfdm05aXgzemRjIiwiZm9yZWlnbklkIjoiX3YwMnp0bGY3OCIsIm51bWJlciI6IjAxNzYzMDE0MzgxOCIsInNwaXR6bmFtZSI6IkJlaXNwaWVsc3BpdHpuYW1lIiwiaWF0IjoxNTE2MjM5MDIyfQ.EyutSnEGE9ShftjFZ7AjgcMabCeQbJ9uplxiVvAPat0'});
-  // Connection failed
-  socket.on('error', function(err) {
-    throw new Error(err);
-  });
-  // Connection succeeded
-  socket.on('success', function(data) {
-    console.log(data.message);
-    console.log('user info: ' + data.user);
-    console.log('logged in: ' + data.user.logged_in)
-  })
 
-  socket.emit("send-user-id", "1", "updated" , (response) => {
+
+
+<script>
+ var socket = io('http://localhost:5000')
+ // {query: 'auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJfdm05aXgzemRjIiwiZm9yZWlnbklkIjoiX3YwMnp0bGY3OCIsIm51bWJlciI6IjAxNzYzMDE0MzgxOCIsInNwaXR6bmFtZSI6IkJlaXNwaWVsc3BpdHpuYW1lIiwiaWF0IjoxNTE2MjM5MDIyfQ.EyutSnEGE9ShftjFZ7AjgcMabCeQbJ9uplxiVvAPat0'});
+  var data = "Geklaute PermanentID"
+  socket.emit("got-new-messages?", data, (response) => {
   console.log(response); // ok
 });
 </script>
+
 </script>
 </html>

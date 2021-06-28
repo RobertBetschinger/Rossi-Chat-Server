@@ -3,14 +3,17 @@ const mongoose = require ("mongoose");
 const userSchema = new mongoose.Schema({
     privateuserId: {
         type: String,
+        unique: true,
         required: true,
     },
     foreignId:{
         type: String,
+        unique:true,
         required:true,
     },
     number: {
         type: String,
+        unique:true,
         required: true,
     },
     spitzname: {

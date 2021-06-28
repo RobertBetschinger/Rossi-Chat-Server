@@ -8,6 +8,10 @@ const keyExchangeSchema = new mongoose.Schema(
     senderPublicKey: String,
     timestamp: String,
     status: String,
+    chatId: String,
+    groupName: String,
+    phoneNumber: String,
+    force: Boolean, 
   },
   { versionKey: false }
 );

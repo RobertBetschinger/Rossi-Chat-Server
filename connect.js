@@ -3,6 +3,7 @@ require("dotenv").config();
 const { response } = require("express");
 const mongoose = require("mongoose");
 const { options } = require("./router.js");
+var ObjectID = require('mongodb').ObjectID;
 require("./models/user.model.js");
 require("./models/message.model.js");
 require("./models/key.model.js");
@@ -18,7 +19,7 @@ function connect() {
     "mongodb+srv://rossi-chat-server:" +
     process.env.MONGO_ATLAS_CREDS +
     "@cluster0.clgcc.mongodb.net/Rossi-Chat-App?retryWrites=true&w=majority",
-    { useNewUrlParser: true, useUnifiedTopology: true }
+    { useNewUrlParser: true, useUnifiedTopology: true,useCreateIndex:true }
 
   );
 }
@@ -44,15 +45,32 @@ function addNewUser(userObject) {
           reject(err);
         }
         else {
-          resolve(doc);
+          resolve(doc.toObject());
         }
       })
     });
   } catch (error) {
     console.log(error);
     console.log("addNewUser failed");
+    return error
   }
 }
+
+/*async function addNewUser(userObject){
+  console.log("Connect.js addNewUser");
+  try {
+    var user = new User(userObject);
+    user.save((err, doc) => {
+      if (!err) {
+        console.log("User added to db");
+        return true;
+      }
+    });
+  } catch (error) {
+    
+  }
+}*/
+
 
 
 async function identifyUser(privId, forId, number) {
@@ -293,15 +311,15 @@ async function addMessage(messageobject) {
 }
 
 async function findMessagesForUser(recieverForeignID) {
-  console.log("Connect.js findMessagesForUser");
-  console.log(
-    "Das ist die ForeignId anhand der wir suchen" + recieverForeignID
-  );
+  //console.log("Connect.js findMessagesForUser");
+  //console.log(
+  //  "Das ist die ForeignId anhand der wir suchen" + recieverForeignID
+  //);
   try {
     var messages = [];
     var messagesencoded = [];
     messages = await Message.find(
-      { receiverId: recieverForeignID }).lean();
+      { receiverId: recieverForeignID }).lean().sort('timestamp');
     messages.forEach(message => messagesencoded.push({
       "messageId": message.messageId,
       "senderId": message.senderId,
@@ -309,7 +327,8 @@ async function findMessagesForUser(recieverForeignID) {
       "messageContent": message.messageContent,
       "timestamp": message.timestamp,
       "forwardKey": message.forwardKey,
-      "contentType": message.contentType
+      "contentType": message.contentType,
+      "chatId": message.chatId
     }))
     return messagesencoded
   } catch (error) {
@@ -369,10 +388,11 @@ async function senderForeignIdWithMessageId(messageId) {
 async function deleteMessage(deleteMessages) {
   console.log("Connect.js findMessagesForUser");
   try {
-    Message.deleteOne({ messageId: { $in: deleteMessages } }),
-      function (err, message) {
-        if (err) return handleError(err);
-      };
+    deleteMessages.forEach((mId) => {
+      Message.deleteOne({messageId: mId}, function (err) {
+        if (err) console.log(err);
+      });
+    });
   } catch (error) {
     console.log(error);
     console.log("Message wasnt saved Online, so it failed");
@@ -408,12 +428,48 @@ async function searchForInitiatedExchanges(foreignId, privateId) {
       function (err, message) {
         if (err) return handleError(err);
       }
-    );
+    ).sort('timestamp');
     return exchangeObjects;
     //das mit dem Löschen muss noch eingebaut werden.
   } catch (error) {
     console.log(error);
     return false;
+  }
+}
+
+async function searchForInitiatedSingleExchange(permanentID, foreignID) {
+  console.log("Connect.js searchForRequestedSingleExhange to overwrite ");
+  try {
+    console.log("Mit dieser Foreign id : " + foreignID);
+    exchangeObject = await KeyExchange.find(
+      { senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated" },
+      function (err, message) {
+        if (err) return handleError(err);
+      }
+    );
+    return exchangeObject;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+}
+
+async function overWriteSingleExchangeObject(permanentID, foreignID, answeredKey, cId) {
+  console.log("Connect.js searchForRequestedSingleExhange and overwrite itoverwrite ");
+  try {
+    console.log("Mit dieser Foreign id : " + foreignID);
+    var query = {senderPrivateId: permanentID,senderForeignId:foreignID,status: "initiated"};
+    var update = {status: 'answered', senderPublicKey: answeredKey, chatId: cId};
+    exchangeObject = await KeyExchange.findOneAndUpdate(
+      query, update, {new:true},
+      function (err, message) {
+        if (err) return handleError(err);
+      }
+    );
+    return exchangeObject;
+  } catch (error) {
+    console.log(error);
+    return undefined;
   }
 }
 
@@ -426,10 +482,10 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
         senderForeignId: foreignId,
         status: "answered",
       },
-      function (err, message) {
+      function (err) {
         if (err) return handleError(err);
       }
-    );
+    ).sort('timestamp');
     console.log(typeof answeredExchangeObjects);
     return answeredExchangeObjects;
     //Das mit dem löschen muss noch eingebaut werden.
@@ -440,15 +496,16 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
 }
 
 async function deleteKeyExchange(deleteThisKey) {
-  console.log("Connect.js findMessagesForUser");
+  console.log("Connect.js deleteKeyExchange");
   try {
-    KeyExchange.deleteOne({ _id: deleteThisKey }),
-      function (err, message) {
+    const objectId = new ObjectID(deleteThisKey);
+    await KeyExchange.deleteOne({ _id: objectId },
+      function (err) {
         if (err) return handleError(err);
-      };
+      });
   } catch (error) {
     console.log(error);
-    console.log("deleteThisKey failed");
+    console.log("deleteKeyExchange failed");
   }
 }
 
@@ -476,6 +533,8 @@ module.exports = {
   changePhonenumber,
   changePseudonym,
   saveInitiateKeyExchange,
+  overWriteSingleExchangeObject,
+  searchForInitiatedSingleExchange,
   searchForInitiatedExchanges,
   searchForAnsweredExchanges,
   deleteKeyExchange,
