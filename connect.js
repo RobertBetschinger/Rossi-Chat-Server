@@ -226,8 +226,8 @@ function findUserByNumberInMessagebird(number) {
 function updateUserVerificationStatus(mongodbId) {
   return new Promise((resolve, reject) => {
     filter = {_id: mongodbId};
-    update = {$set:{verified: true}};
-    User.findOneAndUpdate(filter, update, {useFindAndModify: false}, { new: true }, (err, doc) => {
+    update = {verified: true};
+    User.findOneAndUpdate(filter, update, { new: true }, (err, doc) => {
       if (err) {
         reject(err);
       }
