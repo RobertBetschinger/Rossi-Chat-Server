@@ -222,12 +222,12 @@ function findUserByNumberInMessagebird(number) {
   }
 };
 
-//connect();
-//async function test() {
-//  var birdId = await findUserByNumberInMessagebird("017630143818");
-//  console.log(birdId);
-//}
-//test();
+connect();
+async function test() {
+  var birdId = await findUserByNumberInMessagebird("017630143818");
+  console.log(birdId);
+}
+test();
 
 function updateUserVerificationStatus(mongodbId) {
   return new Promise((resolve, reject) => {
