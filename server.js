@@ -207,10 +207,8 @@ io.on("connection", function (socket) {
     }
     console.log("Server.js verify sms token");
     try {
-      const birdId = await mongodb
-        .findUserByNumberInMessagebird(object.phonenumber);
-      const result = await msgbird
-        .verifyMessagebirdToken(birdId, object.token);
+      var birdId = await mongodb.findUserByNumberInMessagebird(object.phonenumber);
+      var result = await msgbird.verifyMessagebirdToken(birdId, object.token);
       console.log("Usernumber found in messagebird db collection");
       console.log("Messagebird token verified");
       if (result.status === "verified") {
