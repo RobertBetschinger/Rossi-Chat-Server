@@ -127,7 +127,7 @@ io.on("connection", function (socket) {
       var forid = ID();
       //Create Userobject with default verification status: false
       const preUserObject = {
-        _id: String(privateid)+String(forid),
+        _id: String(privateid) + String(forid),
         privateuserId: privateid,
         foreignId: forid,
         number: object.phonenumber,
@@ -142,7 +142,7 @@ io.on("connection", function (socket) {
         var existance = await mongodb.findExistingRegistration(
           preUserObject.number
         );
-        if(existance){
+        if (existance) {
           answer("Error: Number already exists");
         }
         preUserObject.verified = true;
@@ -164,7 +164,7 @@ io.on("connection", function (socket) {
         var existance = await mongodb.findExistingRegistration(
           preUserObject.number
         );
-        if(existance){
+        if (existance) {
           answer("Error: Number already exists");
         }
         //Request distribution of SMS token
@@ -208,11 +208,11 @@ io.on("connection", function (socket) {
     console.log("Server.js verify sms token");
     try {
       var birdobject = await mongodb
-        .findUserByNumberInMessagebird(object.phonenumber)
-        .then(console.log("Usernumber found in messagebird db collection"+ birdobject));
+        .findUserByNumberInMessagebird(object.phonenumber);
       var result = await msgbird
-        .verifyMessagebirdToken(birdobject.birdId, object.token)
-        .then(console.log("Messagebird token verified"));
+        .verifyMessagebirdToken(birdobject.birdId, object.token);
+      console.log("Usernumber found in messagebird db collection");
+      console.log("Messagebird token verified");
       if (result.status === "verified") {
         var tempUserObject = await mongodb.findUserByNumber(object.phonenumber);
         var newUserObject = await mongodb
@@ -286,7 +286,7 @@ io.on("connection", function (socket) {
         if (intAttackerMode == true) {
           internalAttacker.readForeignId(user.foreignId)
         }
-        if(user !== null){
+        if (user !== null) {
           answer(user.foreignId);
         } else {
           answer("User not found");
