@@ -1,6 +1,5 @@
 var app = require("express")();
 const mongodb = require("./connect");
-const enforce = require('express-sslify');
 var server = require("http").createServer(app);
 var io = require("socket.io")(server, {
   cors: {
@@ -41,9 +40,6 @@ const rateLimiter = new RateLimiterMemory({
   points: 1000, // 100 points
   duration: 3, // per 3 seconds
 });
-
-//ToDo: Secret Variable erstellen und evtl. nachsehen wie man JWT verschlüsseln kann
-//Timo: Einbau von JWT erzeugung wenn SMS erfolgreich war. Ich bau das mal die tage. Dann musst du es nur noch einfügen an der richtigen Stelle.
 
 // set authorization for socket.io Middleware befor connection gets established the first time.
 // using middleware
@@ -189,7 +185,7 @@ io.on("connection", function (socket) {
 
 
 
-  //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an
+  //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an --> JW Token wird zurückgegeben
   socket.on("verify-sms-token", async (object, answer) => {
     try {
       await rateLimiter.consume(socket.handshake.address, 25);
@@ -880,7 +876,6 @@ var PrivateID = function () {
 //This Part has to be at the bottom of the Code
 
 function createServer() {
-  app.use(enforce.HTTPS({ trustProtoHeader: true }));
   app.use(router);
   app.use(cors());
   server.listen(PORT, () => {
