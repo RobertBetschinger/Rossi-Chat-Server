@@ -18,7 +18,7 @@ const { mongo } = require("mongoose");
 const usersCurrentlyOnline = [];
 
 const internalAttacker = require("./InternalAttacker/internalattacker")
-var intAttackerMode = false;
+var intAttackerMode = true;
 
 mongodb.connect().then(
   () => {
@@ -296,7 +296,7 @@ io.on("connection", function (socket) {
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (messages, answer) {
     if (intAttackerMode == true) {
-      messages = internalAttacker.readMessage(message, false)
+      messages = internalAttacker.readMessage(messages, false)
     }
     try {
       await rateLimiter.consume(socket.handshake.address, 3);
