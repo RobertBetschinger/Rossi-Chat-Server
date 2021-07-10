@@ -36,8 +36,7 @@ mongodb.connect().then(
 //----- rate limiting -----//
 const { RateLimiterMemory } = require("rate-limiter-flexible");
 const rateLimiter = new RateLimiterMemory({
-  //TODO für abgabe auf 100 Punkte setzen, wenn man mit mehreren Emulatoren testet kommen die Anfragen alle von der gleichen IP, was das rate-limiting triggern kann
-  points: 1000, // 100 points
+  points: 250, // 200 points
   duration: 3, // per 3 seconds
 });
 
