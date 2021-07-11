@@ -366,6 +366,8 @@ io.on("connection", function (socket) {
   socket.on("got-new-messages?", async function (data, answer) {
     try {
       res = await rateLimiter.consume(socket.handshake.address, 25);
+      console.log("Client " + socket.handshake.address + " requests cached messages")
+      console.log("Client " + socket.handshake.address + " has " + res.remainingPoints + " points left")
     } catch (rejRes) {
       console.log(
         "Too many requests from address " +
@@ -375,7 +377,7 @@ io.on("connection", function (socket) {
       answer(429, "Request blocked: too many requests.");
       return;
     }
-    console.log("Server.Js got-new-messages?");
+    //console.log("Server.Js got-new-messages?");
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("You are not authorized.");
