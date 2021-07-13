@@ -44,7 +44,7 @@ Messagebird
 
 Im aktuellen Setup werden SMS über den Messagebird Zugang für € 0,07 versendet. 
 Wir würden die API Keys mit einem Guthaben von knapp € 10,00 hierfür für einen Zeitraum von 2 Monaten zum Testen der Applikation zur Verfügung stellen und die Keys danach deaktivieren.
-Sollte die App und der Server in Zukunft, wie bereits erwähnt in der Lehre Anwendung finden, sollte hier ein eigener Messagebird Account erstellt werden und die Keys dementsprechend ersetzt werden.
+Sollte die App und der Server in Zukunft, wie bereits erwähnt, in der Lehre Anwendung finden, sollte hier ein eigener Messagebird Account erstellt werden und die Keys dementsprechend ersetzt werden.
 Änderungen werden dadurch an folgenden Stellen notwendig:
 - neue Keys hinterlegen in Heroku Confiv Vars
 - .env File (im Falle eines lokalen Hostens)
