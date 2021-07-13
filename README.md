@@ -15,10 +15,10 @@ Beim Backend-Server handelt es sich dabei um einen Node.JS Server mit Socket.IO 
 
 # Installation des Server Lokal:
 
-*  Clonen des Repositorys
+* Clonen des Repositorys
 * Wechseln in das Entsprechende Verzeichnis
 * run "npm install"
-*  run "npm start" 
+* run "npm start" 
 
 "npm start" startet einen Deamon, welcher bei Dateiänderungen vom Server, diesen automatisch neu startet. 
 
