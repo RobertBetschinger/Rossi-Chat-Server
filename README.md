@@ -36,6 +36,6 @@ Standardmäßig verbindet sich die App mit dem auf Heroku gehosteten Server. Bei
 * package.json (Auflistung aller notwendigen Abhänggigkeiten)
 
 Created by:
- - timonbunghardt
+ - timobunghardt
  - Adrian Lanzl 
  - robertbetschinger
