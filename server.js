@@ -13,10 +13,11 @@ const secret = process.env.ACCESS_TOKEN_SECRET || "secret";
 var jwtAuth = require("socketio-jwt-auth");
 const jwt = require("jsonwebtoken");
 const msgbird = require("./verify");
-const { mongo } = require("mongoose");
+
+
+
 //Array with socketsId and the corresponding foreignID
 const usersCurrentlyOnline = [];
-
 const internalAttacker = require("./InternalAttacker/internalattacker")
 var intAttackerMode = false;
 
@@ -40,18 +41,16 @@ const rateLimiter = new RateLimiterMemory({
   duration: 3, // per 3 seconds
 });
 
-// set authorization for socket.io Middleware befor connection gets established the first time.
+
 // using middleware
 io.use(
   jwtAuth.authenticate(
     {
-      secret: secret, // required, used to verify the token's signature
-      algorithm: "HS256", // optional, default to be HS256
+      secret: secret, 
+      algorithm: "HS256", 
       succeedWithoutToken: true,
     },
     async function (payload, done) {
-      // you done callback will not include any payload data now
-      // if no token was supplied
       if (payload && payload.number) {
         var user = await mongodb.identifyUser(
           payload.sub,
@@ -59,11 +58,9 @@ io.use(
           payload.number
         );
         if (!user) {
-          // return fail with an error message
           console.log("user does not exist");
           return done(null, false, "user does not exist");
         }
-        // return success with a user info
         return done(null, user);
       } else {
         return done(); // in your connection handler user.logged_in will be false
@@ -72,6 +69,8 @@ io.use(
   )
 );
 
+
+//Initiales Connection Event, da bidirektionale Verbindung ermöglicht. Middleware wird hierdrin ebenfalls benutzt. Falls Erfolgreich, wird der User in Currently Online DB eingetragen.
 io.on("connection", function (socket) {
   console.log("Authentication passed! This User connected");
   console.log(socket.request.user);
@@ -97,6 +96,7 @@ io.on("connection", function (socket) {
     }
   });
 
+
   //erstmaliges Einloggen
   socket.on("request-registration", async (object, answer) => {
     try {
@@ -111,10 +111,8 @@ io.on("connection", function (socket) {
       answer(429, "Request blocked: too many requests.");
       return;
     };
-
     console.log("Server.js request-registration");
     try {
-      //Create IDs
       var privateid = PrivateID();
       var forid = ID();
       //Create Userobject with default verification status: false
@@ -149,8 +147,6 @@ io.on("connection", function (socket) {
         };
         accessToken = jwt.sign(jwtuser, process.env.ACCESS_TOKEN_SECRET);
         answer(jwtuser, accessToken);
-
-
       } else {
         //Check for existing registration of phonenumber in mongodb
         var existance = await mongodb.findExistingRegistration(
@@ -182,9 +178,7 @@ io.on("connection", function (socket) {
   });
 
 
-
-
-  //User will sich registrieren-->rr->SMS shcicken und ID-Erzeugen --> Token kommt an --> JW Token wird zurückgegeben
+  //User will sich registrieren-->rr->SMS schicken und ID-Erzeugen --> Token kommt an --> JW Token wird zurückgegeben
   socket.on("verify-sms-token", async (object, answer) => {
     try {
       await rateLimiter.consume(socket.handshake.address, 25);
@@ -226,7 +220,6 @@ io.on("connection", function (socket) {
       answer("rejected");
     }
   });
-
 
 
   //Nutzerdaten aus allen DB Collections löschen
@@ -352,7 +345,6 @@ io.on("connection", function (socket) {
             }
           }
         }
-        //Evtl. Liste von answers bauen, die dann als acnknowledgment zurückkommt. Bzw eig unnötig. wenn eine nicht klappt schmiert sowieso ab
         answer(true);
       } catch (error) {
         console.log(error);
@@ -362,7 +354,6 @@ io.on("connection", function (socket) {
   });
 
   //Abfragen ob Nachrichten da sind.
-  ///Sicherheitslücke
   socket.on("got-new-messages?", async function (data, answer) {
     try {
       res = await rateLimiter.consume(socket.handshake.address, 25);
@@ -413,7 +404,6 @@ io.on("connection", function (socket) {
       return;
     }
     console.log("Server.js messsage-received");
-    //Nachricht abspeichern das sie empfangen wurden.
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("You are not authorized.");
@@ -446,13 +436,12 @@ io.on("connection", function (socket) {
       } catch (error) {
         console.log(error);
         console.log(
-          "NachrichtenStatus WurdeEmpfangen konnten nicht zugestellt oder überschrieben werden."
+          "Nachrichten Status: Wurde Empfangen konnten nicht zugestellt oder überschrieben werden."
         );
         answer(false);
       }
     }
   });
-
 
 
   //Wie nachrichten abfragen. Nur ob diese zugestellt wurden. Also Zugestellt beim Empfänger.
@@ -495,7 +484,6 @@ io.on("connection", function (socket) {
     }
   });
 
-  //Funktion um Messages zu löschen
   //Nachrichten sind engültig zugestellt und Sender hat dies auch bestätigt bekommen. Nachrichten aus DB löschen
   socket.on("conclude-messages-exchange", async (messageIds, answer) => {
     try {
@@ -526,9 +514,6 @@ io.on("connection", function (socket) {
     }
   });
 
-
-
-  //Instant einrichten
   //Key Exchange Funktionen:
   socket.on("initiate-key-exchange", async (data, answer) => {
     try {
@@ -546,8 +531,6 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("You are not authorized.");
-
-
     } else {
       for (var i = 0; i < data.length; i++) {
         try {
@@ -606,8 +589,6 @@ io.on("connection", function (socket) {
     if (!socket.request.user.logged_in) {
       console.log("User ist nicht berechtigt diese Schnittstelle auszuführen.");
       answer("You are not authorized.");
-
-
     } else {
       for (var i = 0; i < data.length; i++) {
         try {
@@ -660,8 +641,6 @@ io.on("connection", function (socket) {
               );
               console.log(OverwriteStatus)
             }
-
-
           }
         } catch (error) {
           console.log(error);
@@ -672,6 +651,7 @@ io.on("connection", function (socket) {
     }
   });
 
+//Methode zum Abrufen ob Key-Requests da sind.
   socket.on("check-for-key-requests", async function (data, answer) {
     try {
       await rateLimiter.consume(socket.handshake.address, 15);
@@ -690,8 +670,6 @@ io.on("connection", function (socket) {
       answer("You are not authorized.");
     } else {
       try {
-        //Hier noch Code ändern zu socket.request
-        //Einmal abfragen ob Answered Objects da sind.
         console.log("Abfragen ob answered Objekte da sind.");
         var responses = await mongodb.searchForAnsweredExchanges(
           data.privateId,
@@ -744,7 +722,6 @@ io.on("connection", function (socket) {
         }
       } catch (error) {
         console.log(error);
-        // answer(false)
       }
     }
   });
@@ -780,62 +757,14 @@ io.on("connection", function (socket) {
     }
   });
 
-  socket.on(
-    "change-phonenumber",
-    async function (userObject, newnumber, answer) {
-      //Für Timo: Datenbankanbindung
-      try {
-        numberchanged = await mongodb.changePhonenumber(
-          userObject.userId,
-          newnumber
-        );
-        if (numberchanged === true) {
-          answer(
-            "Phonenumber of user" +
-            userObject.userId +
-            "has been changed to" +
-            newnumber
-          );
-        }
-      } catch {
-        console.log(err);
-        answer(false);
-      }
-    }
-  );
 
-  socket.on(
-    "change-pseudonym",
-    async function (userObject, newNickname, answer) {
-      //Für Timo: Datenbankanbindung
-      try {
-        nicknamechanged = await mongodb.changePseudonym(
-          userObject.userId,
-          newNickname
-        );
-        if (nicknamechanged === true) {
-          answer(
-            "Phonenumber of user" +
-            userObject.userId +
-            "has been changed to" +
-            newNickname
-          );
-        }
-      } catch {
-        console.log(err);
-        answer(false);
-      }
-    }
-  );
 });
 
 //Funktionen Die nicht im Socket.io event stattfinden
 //Funktionen Die nicht im Socket.io event stattfinden
 //Funktionen Die nicht im Socket.io event stattfinden
 //Funktionen Die nicht im Socket.io event stattfinden
-function lookUpChatPartners(chatId) {
-  //Searches in ChatDatabase all Chat pArtners, returns array
-}
+
 
 function getSocketId(recevierId) {
   for (let i = 0; i < usersCurrentlyOnline.length; i++) {
@@ -848,7 +777,6 @@ function getSocketId(recevierId) {
   return null;
 }
 
-//Muss auf ForeignKey umgestellt werden.
 function isOnline(onlinePermanentId) {
   for (let i = 0; i < usersCurrentlyOnline.length; i++) {
     if (usersCurrentlyOnline[i].ForeignPermanentID === onlinePermanentId) {
@@ -858,21 +786,16 @@ function isOnline(onlinePermanentId) {
   return false;
 }
 
+
+//Methoden zur Erstellung einer UniqueID. Quasi sicher, da es in der Zeitbeschrenkung von 1er Millisekunde durch Date.now quasi unmöglich ist gleichzeitig noch einen identischen Wert über den hinteren teil zu erhalten.
 var ID = function () {
-  // Math.random should be unique because of its seeding algorithm.
-  // Convert it to base 36 (numbers + letters), and grab the first 9 characters
-  // after the decimal.
-  return Math.random().toString(36).substr(2, 36);
+  return Date.now().toString(36) + Math.random().toString(36).substr(1);
 };
 
 var PrivateID = function () {
-  // Math.random should be unique because of its seeding algorithm.
-  // Convert it to base 36 (numbers + letters), and grab the first 9 characters
-  // after the decimal.
-  return "_" + Math.random().toString(36).substr(2, 36);
+  return "_" + Date.now().toString(36) + Math.random().toString(36).substr(1);
 };
 
-//This Part has to be at the bottom of the Code
 
 function createServer() {
   app.use(router);

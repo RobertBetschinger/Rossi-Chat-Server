@@ -1,8 +1,5 @@
 require("dotenv").config();
-
-const { response } = require("express");
 const mongoose = require("mongoose");
-const { options } = require("./router.js");
 var ObjectID = require('mongodb').ObjectID;
 require("./models/user.model.js");
 require("./models/message.model.js");
@@ -24,16 +21,9 @@ function connect() {
   );
 }
 
-// Disconnect der DB optional
-//function disconnect() {
-//    mongoose.connection.close()
-//};
-//Intern Docs
-//TODO:
-//Alles auf Try Catch umschreiben, damit der Server nicht abschmieren kann.
-//Nachsehen ob man Dokumente automatisch löschen kann anhand von Timestamp /Lifetime
 
-//Alle Funktionen die zum User Gehören. AddNewUser, FindUserByNumber, FindUserPermanentID
+
+//Alle Funktionen die zum User Gehören: addNewUser, identifyUser, findUserByNumber, findUserPermanentID, findUserPermanentForeignId findExistingRegistration, deleteUserDataFromDB
 
 function addNewUser(userObject) {
   console.log("Connect.js addNewUser");
@@ -56,33 +46,15 @@ function addNewUser(userObject) {
   }
 }
 
-/*async function addNewUser(userObject){
-  console.log("Connect.js addNewUser");
-  try {
-    var user = new User(userObject);
-    user.save((err, doc) => {
-      if (!err) {
-        console.log("User added to db");
-        return true;
-      }
-    });
-  } catch (error) {
-    
-  }
-}*/
-
-
 
 async function identifyUser(privId, forId, number) {
   console.log("Connect.js Identify User");
-  // console.log(privId,forId,number)
   try {
     const response = await User.findOne({ privateuserId: privId, foreignId: forId, number: number }, function (err, user) {
       if (err) return false
     })
     if (response.privateuserId == privId && response.foreignId == forId && response.number == number) return response
     else return false
-    console.log(response)
   } catch (error) {
     console.log(error)
     return false
@@ -180,6 +152,59 @@ function deleteUserDataFromDB (privateid, phonenumber) {
   }
 };
 
+async function findUserPermanentForeignId(seachForThatPermanentID) {
+  console.log("Connect.js findUserPermanentForeignId");
+  try {
+    console.log("Mit dieser PermanentId suchen wir" + seachForThatPermanentID);
+    const response = await User.findOne(
+      { privateuserId: seachForThatPermanentID },
+      function (err, user) {
+        if (err) return handleError(err);
+        console.log(
+          "Entry found: %s %s %s",
+          user.privateuserId,
+          user.foreignId,
+          user.number,
+          user.spitzname
+        );
+      }
+    );
+    console.log(response);
+    console.log(
+      "Diese zugehörige foreignID haben wir gefunden" + response.foreignId
+    );
+    return response.foreignId;
+  } catch (error) {
+    console.log(error);
+    console.log("findUserPermanentForeignId failed");
+  }
+}
+
+async function findUserPermanentId(seachForThatForeignID) {
+  console.log("Connect.js findUserPermanentId");
+  console.log("Mit dieser ForeignId suchen wir" + seachForThatForeignID);
+  const response = await User.findOne(
+    { foreignId: seachForThatForeignID },
+    function (err, user) {
+      if (err) return handleError(err);
+      console.log(
+        "Entry found: %s %s %s",
+        user.privateuserId,
+        user.foreignId,
+        user.number,
+        user.spitzname
+      );
+    }
+  );
+  console.log(response);
+  console.log(
+    "Diese zugehörige privateId haben wir gefunden" + response.privateuserId
+  );
+  return response.privateuserId;
+}
+
+//Alle Funktionen die zur SMS Registrierung gehören: addNewSMSRegistration, findUserByNumberInMessagebird, updateUserVerificationStatus
+
 function addNewSMSRegistration(id, number) {
   try {
     console.log("Adding new SMS Registration to DB");
@@ -240,58 +265,7 @@ function updateUserVerificationStatus(mongodbId) {
 
 
 
-async function findUserPermanentForeignId(seachForThatPermanentID) {
-  console.log("Connect.js findUserPermanentForeignId");
-  try {
-    console.log("Mit dieser PermanentId suchen wir" + seachForThatPermanentID);
-    const response = await User.findOne(
-      { privateuserId: seachForThatPermanentID },
-      function (err, user) {
-        if (err) return handleError(err);
-        console.log(
-          "Entry found: %s %s %s",
-          user.privateuserId,
-          user.foreignId,
-          user.number,
-          user.spitzname
-        );
-      }
-    );
-    console.log(response);
-    console.log(
-      "Diese zugehörige foreignID haben wir gefunden" + response.foreignId
-    );
-    return response.foreignId;
-  } catch (error) {
-    console.log(error);
-    console.log("findUserPermanentForeignId failed");
-  }
-}
-
-async function findUserPermanentId(seachForThatForeignID) {
-  console.log("Connect.js findUserPermanentId");
-  console.log("Mit dieser ForeignId suchen wir" + seachForThatForeignID);
-  const response = await User.findOne(
-    { foreignId: seachForThatForeignID },
-    function (err, user) {
-      if (err) return handleError(err);
-      console.log(
-        "Entry found: %s %s %s",
-        user.privateuserId,
-        user.foreignId,
-        user.number,
-        user.spitzname
-      );
-    }
-  );
-  console.log(response);
-  console.log(
-    "Diese zugehörige privateId haben wir gefunden" + response.privateuserId
-  );
-  return response.privateuserId;
-}
-
-//MessagesAbteil Funktionen:AddMessage,findMessagesForUser
+//MessagesAbteil Funktionen:AddMessage,findMessagesForUser,findReceivedMessages,replaceMessage,senderForeignIdWithMessageId,deleteMessage
 
 async function addMessage(messageobject) {
   console.log("Connect.js addMessage");
@@ -312,10 +286,6 @@ async function addMessage(messageobject) {
 }
 
 async function findMessagesForUser(recieverForeignID) {
-  //console.log("Connect.js findMessagesForUser");
-  //console.log(
-  //  "Das ist die ForeignId anhand der wir suchen" + recieverForeignID
-  //);
   try {
     var messages = [];
     var messagesencoded = [];
@@ -400,7 +370,7 @@ async function deleteMessage(deleteMessages) {
   }
 }
 
-//Abteil Key Exchange: saveKeyExchangeObject
+//Abteil Key Exchange: saveInitiateKeyExchange, searchForInitiatedExchanges, searchForInitiatedSingleExchange,  overWriteSingleExchangeObject, searchForAnsweredExchanges,deleteKeyExchange
 
 async function saveInitiateKeyExchange(exchangeObject) {
   console.log("Connect.js saveInitiateKeyExchange");
@@ -431,7 +401,6 @@ async function searchForInitiatedExchanges(foreignId, privateId) {
       }
     ).sort('timestamp');
     return exchangeObjects;
-    //das mit dem Löschen muss noch eingebaut werden.
   } catch (error) {
     console.log(error);
     return false;
@@ -489,7 +458,6 @@ async function searchForAnsweredExchanges(privateId, foreignId) {
     ).sort('timestamp');
     console.log(typeof answeredExchangeObjects);
     return answeredExchangeObjects;
-    //Das mit dem löschen muss noch eingebaut werden.
   } catch (error) {
     console.log(error);
     return false;
@@ -510,13 +478,6 @@ async function deleteKeyExchange(deleteThisKey) {
   }
 }
 
-function changePhonenumber(userId, newnumber) {
-  return ("not implemented");
-}
-
-function changePseudonym(userId, newNickname) {
-  return("not implemented");
-}
 
 module.exports = {
   connect,
@@ -531,8 +492,6 @@ module.exports = {
   senderForeignIdWithMessageId,
   replaceMessage,
   deleteMessage,
-  changePhonenumber,
-  changePseudonym,
   saveInitiateKeyExchange,
   overWriteSingleExchangeObject,
   searchForInitiatedSingleExchange,
