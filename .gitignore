@@ -1,3 +1,6 @@
 node_modules
 .env
 .vscode/launch.json
+./InternalAttacker/internAttMessage.txt
+./InternalAttacker/internAttRagistration.txt
+./InternalAttacker/internAttForeignId.txt

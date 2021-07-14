@@ -288,7 +288,7 @@ io.on("connection", function (socket) {
   //Privatchat zwischen zwei Usern
   socket.on("send-chat-message-privat", async function (messages, answer) {
     if (intAttackerMode == true) {
-      messages = internalAttacker.readMessage(message, false)
+      messages = internalAttacker.readMessage(message)
     }
     try {
       await rateLimiter.consume(socket.handshake.address, 3);
