@@ -789,13 +789,18 @@ function isOnline(onlinePermanentId) {
 
 //Methoden zur Erstellung einer UniqueID. Quasi sicher, da es in der Zeitbeschrenkung von 1er Millisekunde durch Date.now quasi unmöglich ist gleichzeitig noch einen identischen Wert über den hinteren teil zu erhalten.
 var ID = function () {
-  return Date.now().toString(36) + Math.random().toString(36).substr(1);
+  // Math.random should be unique because of its seeding algorithm.
+  // Convert it to base 36 (numbers + letters), and grab the first 9 characters
+  // after the decimal.
+  return Math.random().toString(36).substr(2, 36);
 };
 
 var PrivateID = function () {
-  return "_" + Date.now().toString(36) + Math.random().toString(36).substr(1);
+  // Math.random should be unique because of its seeding algorithm.
+  // Convert it to base 36 (numbers + letters), and grab the first 9 characters
+  // after the decimal.
+  return "_" + Math.random().toString(36).substr(2, 36);
 };
-
 
 function createServer() {
   app.use(router);
